@@ -49,4 +49,12 @@ using Test
     @test superinterfaces(D()) == (C(), )
     @test requiredmethods(D()) == (d1, )
 
+    function e1 end
+
+    @test_throws UndefVarError begin
+        @interface E extends Foo, Bar begin
+            e1
+        end
+    end
+
 end

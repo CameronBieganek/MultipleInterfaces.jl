@@ -1,13 +1,17 @@
 
+
 module ExtendableInterfaces
 
+
 export @interface, requiredmethods, superinterfaces
+
 
 function requiredmethods end
 function superinterfaces end
 
+
 function interface_helper(name, superinterfaces, methods)
-    superinterfaces = Expr(:tuple, map(s -> :($s()), superinterfaces.args)...)
+    superinterface_objs = Expr(:tuple, map(s -> :($s()), superinterfaces.args)...)
 
     # No error handling yet. For now we assume that `methods` is
     # a block with a list of function names (Symbols).
@@ -16,12 +20,16 @@ function interface_helper(name, superinterfaces, methods)
     name_str = String(name)
 
     ex = quote
+        # This will throw an `UndefVarErr` if any of the declared superinterfaces
+        # are not yet defined.
+        $(superinterfaces.args...)
+
         struct $name
             methods::Tuple
             $name() = new(tuple($(methods...)))
         end
 
-        ExtendableInterfaces.superinterfaces(::$name) = $superinterfaces
+        ExtendableInterfaces.superinterfaces(::$name) = $superinterface_objs
         ExtendableInterfaces.requiredmethods(I::$name) = I.methods
 
         Base.show(io::IO, ::$name) = print(io, $name_str, "()")
@@ -31,9 +39,11 @@ function interface_helper(name, superinterfaces, methods)
     esc(ex)
 end
 
+
 macro interface(name::Symbol, methods)
     interface_helper(name, :(()), methods)
 end
+
 
 macro interface(name::Symbol, extends::Symbol, superinterfaces, methods)
     extends === :extends || error("Invalid interface extension syntax.")
@@ -44,5 +54,6 @@ macro interface(name::Symbol, extends::Symbol, superinterfaces, methods)
 
     interface_helper(name, superinterfaces, methods)
 end
+
 
 end
