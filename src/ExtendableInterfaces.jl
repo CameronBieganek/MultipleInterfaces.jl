@@ -2,10 +2,11 @@
 
 module ExtendableInterfaces
 
-export @implement, @interface
+export @declare, @implement, @interface, @polymorphic
 export requiredmethods, superinterfaces
 
 include("interface.jl")
 include("implement.jl")
+include("polymorphic.jl")
 
 end
