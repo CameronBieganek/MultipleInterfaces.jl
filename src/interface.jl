@@ -18,6 +18,9 @@ function interface_helper(name, superinterfaces, methods)
         # are not yet defined.
         $(superinterfaces.args...)
 
+        # Ditto for the declared methods of the interface.
+        $(methods...)
+
         struct $name
             methods::Tuple
             $name() = new(tuple($(methods...)))

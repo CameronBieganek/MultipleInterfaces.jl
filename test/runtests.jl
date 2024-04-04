@@ -57,4 +57,10 @@ using Test
         end
     end
 
+    @test_throws UndefVarError begin
+        @interface E begin
+            foo
+        end
+    end
+
 end
