@@ -21,13 +21,10 @@ function interface_helper(name, superinterfaces, methods)
         # Ditto for the declared methods of the interface.
         $(methods...)
 
-        struct $name
-            methods::Tuple
-            $name() = new(tuple($(methods...)))
-        end
+        struct $name end
 
         ExtendableInterfaces.superinterfaces(::$name) = $superinterface_objs
-        ExtendableInterfaces.requiredmethods(I::$name) = I.methods
+        ExtendableInterfaces.requiredmethods(::$name) = ($(methods...),)
 
         Base.show(io::IO, ::$name) = print(io, $name_str, "()")
         Base.show(io::IO, ::MIME"text/plain", ::$name) = print(io, "Interface: ", $name_str)
