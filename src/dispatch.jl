@@ -70,3 +70,21 @@ function visit_children(children::Tuple, visited::Tuple, targets::Tuple)
 end
 
 visit_children(children::Tuple{}, visited::Tuple, targets::Tuple) = visited, targets
+
+
+struct NoUniqueMinimum end
+
+
+find_minimum(xs::Tuple) = _find_minimum((), xs)
+
+Base.@assume_effects :total function _find_minimum(left::Tuple, right::Tuple)
+    x = right[1]
+    rest = tail(right)
+    if is_minimum(x, (left..., rest...))
+        x
+    else
+        _find_minimum((left..., x), rest)
+    end
+end
+
+_find_minimum(left::Tuple, right::Tuple{}) = NoUniqueMinimum()
