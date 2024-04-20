@@ -4,7 +4,8 @@ module DispatchTests
 
 using Test
 using ExtendableInterfaces
-using ExtendableInterfaces: tail, in_tuple, delete, is_minimum, find_minimum, NoUniqueMinimum
+using ExtendableInterfaces: tail, in_tuple, delete, is_most_specific
+using ExtendableInterfaces: most_specific, SpecificityAmbiguity
 
 @testset "dispatch" begin
 
@@ -48,35 +49,35 @@ using ExtendableInterfaces: tail, in_tuple, delete, is_minimum, find_minimum, No
     @inferred delete((A(), B(), C()), B())
     @inferred delete((A(), B(), C()), D())
 
-    @test is_minimum(E(), (B(), A()))
-    @test !is_minimum(E(), (B(), A(), F()))
+    @test is_most_specific(E(), (B(), A()))
+    @test !is_most_specific(E(), (B(), A(), F()))
 
-    @inferred is_minimum(E(), (B(), A()))
-    @inferred is_minimum(E(), (B(), A(), F()))
+    @inferred is_most_specific(E(), (B(), A()))
+    @inferred is_most_specific(E(), (B(), A(), F()))
 
-    @test is_minimum(C(), (A(), ))
-    @test !is_minimum(A(), (C(), ))
+    @test is_most_specific(C(), (A(), ))
+    @test !is_most_specific(A(), (C(), ))
 
-    @inferred is_minimum(C(), (A(), ))
-    @inferred is_minimum(A(), (C(), ))
+    @inferred is_most_specific(C(), (A(), ))
+    @inferred is_most_specific(A(), (C(), ))
 
-    @test find_minimum((B(), A(), E())) == E()
-    @test find_minimum((B(), A(), E(), F())) == F()
-    @test find_minimum((B(), F(), A(), E())) == F()
-    @test find_minimum((A(), C(), B())) == C()
-    @test find_minimum((C(), B(), D())) == NoUniqueMinimum()
-    @test find_minimum((A(), H())) == NoUniqueMinimum()
-    @test find_minimum((A(), C(), H())) == NoUniqueMinimum()
+    @test most_specific((B(), A(), E())) == E()
+    @test most_specific((B(), A(), E(), F())) == F()
+    @test most_specific((B(), F(), A(), E())) == F()
+    @test most_specific((A(), C(), B())) == C()
+    @test most_specific((C(), B(), D())) == SpecificityAmbiguity()
+    @test most_specific((A(), H())) == SpecificityAmbiguity()
+    @test most_specific((A(), C(), H())) == SpecificityAmbiguity()
 
-    @inferred find_minimum((B(), A(), E()))
-    @inferred find_minimum((B(), A(), E(), F()))
-    @inferred find_minimum((B(), F(), A(), E()))
-    @inferred find_minimum((A(), C(), B()))
-    @inferred find_minimum((C(), B(), D()))
-    @inferred find_minimum((A(), G()))
-    @inferred find_minimum((A(), C(), G()))
-    @inferred find_minimum((A(), H()))
-    @inferred find_minimum((A(), C(), H()))
+    @inferred most_specific((B(), A(), E()))
+    @inferred most_specific((B(), A(), E(), F()))
+    @inferred most_specific((B(), F(), A(), E()))
+    @inferred most_specific((A(), C(), B()))
+    @inferred most_specific((C(), B(), D()))
+    @inferred most_specific((A(), G()))
+    @inferred most_specific((A(), C(), G()))
+    @inferred most_specific((A(), H()))
+    @inferred most_specific((A(), C(), H()))
 
 end
 
