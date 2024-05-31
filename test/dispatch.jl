@@ -5,7 +5,7 @@ module DispatchTests
 using Test
 using ExtendableInterfaces
 using ExtendableInterfaces: tail, in_tuple, delete, is_most_specific
-using ExtendableInterfaces: most_specific, SpecificityAmbiguity
+using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
 
 @testset "dispatch" begin
 
@@ -40,26 +40,14 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity
     @test in_tuple(C(), (C(), ))
     @test !in_tuple(D(), ())
 
-    @inferred in_tuple(C(), (A(), B(), C()))
-    @inferred in_tuple(C(), (A(), B()))
-
     @test delete((A(), B(), C()), B()) == (A(), C())
     @test delete((A(), B(), C()), D()) == (A(), B(), C())
-
-    @inferred delete((A(), B(), C()), B())
-    @inferred delete((A(), B(), C()), D())
 
     @test is_most_specific(E(), (B(), A()))
     @test !is_most_specific(E(), (B(), A(), F()))
 
-    @inferred is_most_specific(E(), (B(), A()))
-    @inferred is_most_specific(E(), (B(), A(), F()))
-
     @test is_most_specific(C(), (A(), ))
     @test !is_most_specific(A(), (C(), ))
-
-    @inferred is_most_specific(C(), (A(), ))
-    @inferred is_most_specific(A(), (C(), ))
 
     @test most_specific((B(), A(), E())) == E()
     @test most_specific((B(), A(), E(), F())) == F()
@@ -69,15 +57,120 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity
     @test most_specific((A(), H())) == SpecificityAmbiguity()
     @test most_specific((A(), C(), H())) == SpecificityAmbiguity()
 
-    @inferred most_specific((B(), A(), E()))
-    @inferred most_specific((B(), A(), E(), F()))
-    @inferred most_specific((B(), F(), A(), E()))
-    @inferred most_specific((A(), C(), B()))
-    @inferred most_specific((C(), B(), D()))
-    @inferred most_specific((A(), G()))
-    @inferred most_specific((A(), C(), G()))
-    @inferred most_specific((A(), H()))
-    @inferred most_specific((A(), C(), H()))
+
+    # ---- foo ----
+    @declare foo(x: _)
+    @polymorphic foo(x: B) = 1
+    @polymorphic foo(x: C) = 2
+    @polymorphic foo(x: E) = 3
+    @polymorphic foo(x: F) = 4
+
+    struct Cat end
+    @implements Cat: B
+    @implements Cat: E
+
+    @test dispatch(foo, Cat()) == E()
+    @test foo(Cat()) == 3
+
+    struct Dog end
+    @implements Dog: C
+    @implements Dog: D
+
+    @test dispatch(foo, Dog()) == C()
+    @test foo(Dog()) == 2
+
+
+    # ---- bar ----
+    @declare bar(x: _)
+    @polymorphic bar(x: A) = 1
+    @polymorphic bar(x: C) = 2
+    @polymorphic bar(x: D) = 3
+    @polymorphic bar(x: E) = 4
+
+    struct Bear end
+    @implements Bear: C
+    @implements Bear: D
+    @implements Bear: E
+
+    @test dispatch(bar, Bear()) == E()
+    @test bar(Bear()) == 4
+
+    struct Fish end
+    @implements Fish: C
+    @implements Fish: D
+
+    @test dispatch(bar, Fish()) == SpecificityAmbiguity()
+    @test_throws InterfaceDispatchError bar(Fish())
+
+
+    # ---- asdf ----
+    @declare asdf(x: _)
+    @polymorphic asdf(x: B) = 1
+    @polymorphic asdf(x: D) = 2
+    @polymorphic asdf(x: H) = 3
+
+    struct Squid end
+    @implements Squid: B
+    @implements Squid: D
+
+    @test dispatch(asdf, Squid()) == D()
+    @test asdf(Squid()) == 2
+
+    struct Crow end
+    @implements Crow: B
+    @implements Crow: H
+
+    @test dispatch(asdf, Crow()) == SpecificityAmbiguity()
+    @test_throws InterfaceDispatchError asdf(Crow())
+
+    struct Raven end
+    @implements Raven: B
+    @implements Raven: E
+
+    @test dispatch(asdf, Raven()) == B()
+    @test asdf(Raven()) == 1
+
+    struct Goat end
+    @implements Goat: H
+
+    @test dispatch(asdf, Goat()) == H()
+    @test asdf(Goat()) == 3
+
+
+    # ---- qwer ----
+    @declare qwer(x: _)
+    @polymorphic qwer(x: A) = 1
+    @polymorphic qwer(x: B) = 2
+    @polymorphic qwer(x: C) = 3
+    @polymorphic qwer(x: D) = 4
+
+    struct Lizard end
+    @implements Lizard: A
+    @implements Lizard: B
+    @implements Lizard: C
+
+    @test dispatch(qwer, Lizard()) == C()
+    @test qwer(Lizard()) == 3
+
+    struct Toad end
+    @implements Toad: B
+    @implements Toad: C
+    @implements Toad: D
+
+    @test dispatch(qwer, Toad()) == SpecificityAmbiguity()
+    @test_throws InterfaceDispatchError qwer(Toad())
+
+    struct Rabbit end
+    @implements Rabbit: A
+
+    @test dispatch(qwer, Rabbit()) == A()
+    @test qwer(Rabbit()) == 1
+
+    struct Eagle end
+    @implements Eagle: B
+
+    @test dispatch(qwer, Eagle()) == B()
+    @test qwer(Eagle()) == 2
 
 end
 

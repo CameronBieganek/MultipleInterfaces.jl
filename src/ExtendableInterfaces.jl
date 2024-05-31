@@ -4,6 +4,7 @@ module ExtendableInterfaces
 
 export @declare, @implements, @interface, @polymorphic
 export implements, required_methods, superinterfaces
+export InterfaceDispatchError
 
 include("interface.jl")
 include("implements.jl")

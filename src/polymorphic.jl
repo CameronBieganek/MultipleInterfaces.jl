@@ -1,11 +1,15 @@
 
 
+struct SpecificityAmbiguity end
+
+
 function _polymorphic_methods end
 uname(name::Symbol) = Symbol(string("_", name))
 
 
 macro declare(func)
     fname = func.args[1]
+    fname_str = String(fname)
     _fname = uname(fname)
     argname = func.args[2].args[2]
 
@@ -21,6 +25,10 @@ macro declare(func)
             $_fname(ExtendableInterfaces.dispatch($fname, $argname), $argname)
         end
 
+        function $_fname(::ExtendableInterfaces.SpecificityAmbiguity, $argname)
+            throw(InterfaceDispatchError($fname_str, $argname))
+        end
+
         ExtendableInterfaces._polymorphic_methods(::typeof($fname)) = ()
 
         # An `@declare` call should return nothing.
@@ -28,6 +36,24 @@ macro declare(func)
     end
 
     esc(ex)
+end
+
+
+struct InterfaceDispatchError <: Exception
+    fname::String
+    obj
+end
+
+function Base.showerror(io::IO, e::InterfaceDispatchError)
+    msg = (
+        """
+        There is no unique most-specific interface among the intersection of \
+        the interfaces that $(e.fname) dispatches on and the interfaces that \
+        the `$(typeof(e.obj))` type implements. You can choose which interface \
+        to dispatch on with the `@dispatch` macro, like `@dispatch foo(x: A)`.\
+        """
+    )
+    print(io, msg)
 end
 
 

@@ -46,7 +46,7 @@ function visit_interface(interface, visited::Tuple, targets::Tuple)
         return visited, targets
     end
 
-    # If `x` is not in `targets`, then `delete` just returns `targets`.
+    # If `interface` is not in `targets`, then `delete` just returns `targets`.
     targets2 = delete(targets, interface)
     targets2 === () && return nothing
 
@@ -69,10 +69,10 @@ function is_most_specific(interface, targets::Tuple)
     visit_superinterfaces(superinterfaces(interface), (), targets) === nothing
 end
 
+# TODO:
+# most_specific(xs::Tuple{}) = PolymorphicMethodError("No polymorphic method matching foo(x: A)")
 
-struct SpecificityAmbiguity end
-
-
+most_specific(xs::Tuple{Any}) = xs[1]
 most_specific(xs::Tuple) = _most_specific((), xs)
 
 Base.@assume_effects :total function _most_specific(left::Tuple, right::Tuple)
@@ -86,3 +86,12 @@ Base.@assume_effects :total function _most_specific(left::Tuple, right::Tuple)
 end
 
 _most_specific(::Tuple, ::Tuple{}) = SpecificityAmbiguity()
+
+
+function dispatch(f, x)
+    interfaces = _polymorphic_methods(f)
+    # TODO: `Base.filter` probably only infers for tuple lengths < 32, so we
+    # might need to write a custom recursive filter function.
+    intersection = filter(interface -> implements(x, interface), interfaces)
+    most_specific(intersection)
+end

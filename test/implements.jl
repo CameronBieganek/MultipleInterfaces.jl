@@ -5,7 +5,7 @@ module ImplementsMacroTests
 using Test
 using ExtendableInterfaces
 
-@testset "dispatch" begin
+@testset "@implements" begin
 
     function a end
     function b end
