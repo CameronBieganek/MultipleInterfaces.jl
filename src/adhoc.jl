@@ -3,7 +3,7 @@
 struct SpecificityAmbiguity end
 
 
-function _polymorphic_methods end
+function adhoc_methods end
 uname(name::Symbol) = Symbol(string("_", name))
 
 
@@ -29,7 +29,7 @@ macro declare(func)
             throw(InterfaceDispatchError($fname_str, $argname))
         end
 
-        ExtendableInterfaces._polymorphic_methods(::typeof($fname)) = ()
+        ExtendableInterfaces.adhoc_methods(::typeof($fname)) = ()
 
         # An `@declare` call should return nothing.
         nothing
@@ -50,7 +50,7 @@ function Base.showerror(io::IO, e::InterfaceDispatchError)
         There is no unique most-specific interface among the intersection of \
         the interfaces that $(e.fname) dispatches on and the interfaces that \
         the `$(typeof(e.obj))` type implements. This usually indicates that a \
-        more specific adhoc-polymorphic method should be implemented for $(e.fname) \
+        more specific ad hoc polymorphic method should be implemented for $(e.fname) \
         either by the owner of $(e.fname) or the owner(s) of the interfaces that \
         $(e.fname) dispatches on.
         """
@@ -59,7 +59,7 @@ function Base.showerror(io::IO, e::InterfaceDispatchError)
 end
 
 
-macro polymorphic(fdef)
+macro adhoc(fdef)
     # For now assume the single-line form of function definition.
     signature = fdef.args[1]
     body = fdef.args[2]
@@ -76,13 +76,13 @@ macro polymorphic(fdef)
             # It's important to have this before the `let` block, so that if the interface
             # is undefined we get an `UndefVarError` before the `let` block is run. Otherwise
             # a user could call this macro and get an error, but the `let` block has already
-            # updated `_polymorphic_methods`.
+            # updated `adhoc_methods`.
             $_fname(::$interface, $argname) = $(body.args...)
 
             let
-                signatures = ExtendableInterfaces._polymorphic_methods($fname)
+                signatures = ExtendableInterfaces.adhoc_methods($fname)
 
-                function ExtendableInterfaces._polymorphic_methods(::typeof($fname))
+                function ExtendableInterfaces.adhoc_methods(::typeof($fname))
                     (signatures..., $interface())
                 end
             end
@@ -91,8 +91,8 @@ macro polymorphic(fdef)
             $fname
         else
             error(
-                "Polymorphic functions must be declared with `@declare` before ",
-                "methods are declared with `@polymorphic`."
+                "Ad hoc polymorphic functions must be declared with `@declare` before ",
+                "methods are declared with `@adhoc`."
             )
         end
     end

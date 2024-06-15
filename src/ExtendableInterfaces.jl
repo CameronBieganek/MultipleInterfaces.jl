@@ -2,13 +2,13 @@
 
 module ExtendableInterfaces
 
-export @declare, @implements, @interface, @polymorphic
+export @declare, @implements, @interface, @adhoc
 export implements, required_methods, superinterfaces
 export InterfaceDispatchError
 
 include("interface.jl")
 include("implements.jl")
-include("polymorphic.jl")
+include("adhoc.jl")
 include("dispatch.jl")
 
 end

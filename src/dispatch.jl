@@ -89,7 +89,7 @@ _most_specific(::Tuple, ::Tuple{}) = SpecificityAmbiguity()
 
 
 function dispatch(f, x)
-    interfaces = _polymorphic_methods(f)
+    interfaces = adhoc_methods(f)
     # TODO: `Base.filter` probably only infers for tuple lengths < 32, so we
     # might need to write a custom recursive filter function.
     intersection = filter(interface -> implements(x, interface), interfaces)

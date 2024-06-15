@@ -59,10 +59,10 @@ end
 
 # ---- foo ----
 @declare foo(x: _)
-@polymorphic foo(x: B) = 1
-@polymorphic foo(x: C) = 2
-@polymorphic foo(x: E) = 3
-@polymorphic foo(x: F) = 4
+@adhoc foo(x: B) = 1
+@adhoc foo(x: C) = 2
+@adhoc foo(x: E) = 3
+@adhoc foo(x: F) = 4
 
 struct Cat end
 @implements Cat: B
@@ -81,10 +81,10 @@ struct Dog end
 
 # ---- bar ----
 @declare bar(x: _)
-@polymorphic bar(x: A) = 1
-@polymorphic bar(x: C) = 2
-@polymorphic bar(x: D) = 3
-@polymorphic bar(x: E) = 4
+@adhoc bar(x: A) = 1
+@adhoc bar(x: C) = 2
+@adhoc bar(x: D) = 3
+@adhoc bar(x: E) = 4
 
 struct Bear end
 @implements Bear: C
@@ -103,9 +103,9 @@ struct Fish end
 
 # ---- asdf ----
 @declare asdf(x: _)
-@polymorphic asdf(x: B) = 1
-@polymorphic asdf(x: D) = 2
-@polymorphic asdf(x: H) = 3
+@adhoc asdf(x: B) = 1
+@adhoc asdf(x: D) = 2
+@adhoc asdf(x: H) = 3
 
 struct Squid end
 @implements Squid: B
@@ -136,10 +136,10 @@ struct Goat end
 
 # ---- qwer ----
 @declare qwer(x: _)
-@polymorphic qwer(x: A) = 1
-@polymorphic qwer(x: B) = 2
-@polymorphic qwer(x: C) = 3
-@polymorphic qwer(x: D) = 4
+@adhoc qwer(x: A) = 1
+@adhoc qwer(x: B) = 2
+@adhoc qwer(x: C) = 3
+@adhoc qwer(x: D) = 4
 
 struct Lizard end
 @implements Lizard: A
