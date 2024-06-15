@@ -65,7 +65,7 @@ end
 visit_superinterfaces(::Tuple{}, visited::Tuple, targets::Tuple) = visited, targets
 
 
-function is_most_specific(interface, targets::Tuple)
+function is_subinterface_all(interface, targets::Tuple)
     visit_superinterfaces(superinterfaces(interface), (), targets) === nothing
 end
 
@@ -78,7 +78,7 @@ most_specific(xs::Tuple) = _most_specific((), xs)
 Base.@assume_effects :total function _most_specific(left::Tuple, right::Tuple)
     x = right[1]
     rest = tail(right)
-    if is_most_specific(x, (left..., rest...))
+    if is_subinterface_all(x, (left..., rest...))
         x
     else
         _most_specific((left..., x), rest)

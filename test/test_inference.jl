@@ -8,7 +8,7 @@ module TestInference
 
 using Test
 using ExtendableInterfaces
-using ExtendableInterfaces: tail, in_tuple, delete, is_most_specific
+using ExtendableInterfaces: tail, in_tuple, delete, is_subinterface_all
 using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
 
 function a end
@@ -40,11 +40,11 @@ end
 @inferred delete((A(), B(), C()), B())
 @inferred delete((A(), B(), C()), D())
 
-@inferred is_most_specific(E(), (B(), A()))
-@inferred is_most_specific(E(), (B(), A(), F()))
+@inferred is_subinterface_all(E(), (B(), A()))
+@inferred is_subinterface_all(E(), (B(), A(), F()))
 
-@inferred is_most_specific(C(), (A(), ))
-@inferred is_most_specific(A(), (C(), ))
+@inferred is_subinterface_all(C(), (A(), ))
+@inferred is_subinterface_all(A(), (C(), ))
 
 @inferred most_specific((B(), A(), E()))
 @inferred most_specific((B(), A(), E(), F()))

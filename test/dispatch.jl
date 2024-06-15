@@ -4,7 +4,7 @@ module DispatchTests
 
 using Test
 using ExtendableInterfaces
-using ExtendableInterfaces: tail, in_tuple, delete, is_most_specific
+using ExtendableInterfaces: tail, in_tuple, delete, is_subinterface_all
 using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
 
 @testset "dispatch" begin
@@ -43,11 +43,11 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
     @test delete((A(), B(), C()), B()) == (A(), C())
     @test delete((A(), B(), C()), D()) == (A(), B(), C())
 
-    @test is_most_specific(E(), (B(), A()))
-    @test !is_most_specific(E(), (B(), A(), F()))
+    @test is_subinterface_all(E(), (B(), A()))
+    @test !is_subinterface_all(E(), (B(), A(), F()))
 
-    @test is_most_specific(C(), (A(), ))
-    @test !is_most_specific(A(), (C(), ))
+    @test is_subinterface_all(C(), (A(), ))
+    @test !is_subinterface_all(A(), (C(), ))
 
     @test most_specific((B(), A(), E())) == E()
     @test most_specific((B(), A(), E(), F())) == F()
