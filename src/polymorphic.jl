@@ -49,8 +49,10 @@ function Base.showerror(io::IO, e::InterfaceDispatchError)
         """
         There is no unique most-specific interface among the intersection of \
         the interfaces that $(e.fname) dispatches on and the interfaces that \
-        the `$(typeof(e.obj))` type implements. You can choose which interface \
-        to dispatch on with the `@dispatch` macro, like `@dispatch foo(x: A)`.\
+        the `$(typeof(e.obj))` type implements. This usually indicates that a \
+        more specific adhoc-polymorphic method should be implemented for $(e.fname) \
+        either by the owner of $(e.fname) or the owner(s) of the interfaces that \
+        $(e.fname) dispatches on.
         """
     )
     print(io, msg)
