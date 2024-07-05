@@ -32,7 +32,7 @@ function interface_helper(name, superinterfaces, methods_block)
         # Ditto for the declared methods of the interface.
         $(methods...)
 
-        struct $name end
+        struct $name <: Interface end
 
         ExtendableInterfaces.superinterfaces(::$name) = $superinterface_objs
         ExtendableInterfaces.required_methods(::$name) = ($(methods...),)
@@ -54,6 +54,8 @@ function check_methods_block_head(methods_block)
 end
 
 
+# TODO: Get rid of this. Eq <: PartialEq is a good example of a case where you want
+# to extend a single interface without adding any methods.
 function throw_at_least_one_method_error()
     throw(ArgumentError(
         "An interface that does not extend any other interface must require " *

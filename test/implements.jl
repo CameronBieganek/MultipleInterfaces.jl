@@ -24,10 +24,8 @@ using ExtendableInterfaces
     @implements Cat: A
     @implements Dog: B
 
-    @test implements(Cat(), A())
-    @test implements(Dog(), B())
-    @test !implements(Cat(), B())
-    @test !implements(Dog(), A())
+    @test implements(Cat) == (A(), )
+    @test implements(Dog) == (B(), )
 
 end
 

@@ -3,10 +3,12 @@
 struct SpecificityAmbiguity end
 
 
-function adhoc_methods end
+adhoc_methods(::Any) = ()
 uname(name::Symbol) = Symbol(string("_", name))
 
 
+# TODO: See if I can figure out a reasonable way to avoid needing the `@declare` macro.
+# Maybe I can use `@isdefined` to check if the top level method is defined.
 macro declare(func)
     fname = func.args[1]
     fname_str = String(fname)
@@ -29,8 +31,6 @@ macro declare(func)
             throw(InterfaceDispatchError($fname_str, $argname))
         end
 
-        ExtendableInterfaces.adhoc_methods(::typeof($fname)) = ()
-
         # An `@declare` call should return nothing.
         nothing
     end
@@ -48,11 +48,11 @@ function Base.showerror(io::IO, e::InterfaceDispatchError)
     msg = (
         """
         There is no unique most-specific interface among the intersection of \
-        the interfaces that $(e.fname) dispatches on and the interfaces that \
+        the interfaces that `$(e.fname)` dispatches on and the interfaces that \
         the `$(typeof(e.obj))` type implements. This usually indicates that a \
-        more specific ad hoc polymorphic method should be implemented for $(e.fname) \
-        either by the owner of $(e.fname) or the owner(s) of the interfaces that \
-        $(e.fname) dispatches on.
+        more specific ad hoc polymorphic method should be implemented for `$(e.fname)` \
+        either by the owner of `$(e.fname)` or the owner(s) of the interfaces that \
+        `$(e.fname)` dispatches on.
         """
     )
     print(io, msg)

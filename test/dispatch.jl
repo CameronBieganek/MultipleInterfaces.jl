@@ -127,8 +127,8 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
     @implements Raven: B
     @implements Raven: E
 
-    @test dispatch(asdf, Raven()) == B()
-    @test asdf(Raven()) == 1
+    @test dispatch(asdf, Raven()) == D()
+    @test asdf(Raven()) == 2
 
     struct Goat end
     @implements Goat: H
@@ -171,6 +171,59 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
 
     @test dispatch(qwer, Eagle()) == B()
     @test qwer(Eagle()) == 2
+
+
+    # ---- Test transitive "implements" declarations. --------
+    # If a type declares that it implements an interface, it must also implement
+    # all the superinterfaces of that interface.
+
+    function j end
+    function k end
+
+    @interface J begin j end
+    @interface K begin k end
+    @interface L extends J, K
+
+    @declare baz(x: _)
+    @adhoc baz(x: J) = 1
+
+    struct Turtle end
+    @implements Turtle: L
+
+    @test dispatch(baz, Turtle()) == J()
+    @test baz(Turtle()) == 1
+
+    @declare aaa(x: _)
+    @adhoc aaa(x: J) = 1
+    @adhoc aaa(x: K) = 2
+
+    @test dispatch(aaa, Turtle()) == SpecificityAmbiguity()
+    @test_throws InterfaceDispatchError aaa(Turtle())
+
+    function m end
+    function o end
+    function r end
+
+    @interface M begin m end
+    @interface N extends M
+    @interface O begin o end
+    @interface P extends N, O
+    @interface Q extends P
+    @interface R begin r end
+    @interface S extends R
+
+    @declare bbb(x: _)
+    @adhoc bbb(x: M) = 1
+    @adhoc bbb(x: O) = 2
+    @adhoc bbb(x: P) = 3
+    @adhoc bbb(x: R) = 4
+
+    struct Frog end
+    @implements Frog: N
+    @implements Frog: Q
+
+    @test dispatch(bbb, Frog()) == P()
+    @test bbb(Frog()) == 3
 
 end
 
