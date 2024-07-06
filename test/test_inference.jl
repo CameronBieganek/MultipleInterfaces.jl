@@ -65,15 +65,14 @@ end
 @adhoc foo(x: F) = 4
 
 struct Cat end
-@implements Cat: B
-@implements Cat: E
+@type Cat implements B
+@type Cat implements E
 
 @inferred dispatch(foo, Cat())
 @inferred foo(Cat())
 
 struct Dog end
-@implements Dog: C
-@implements Dog: D
+@type Dog implements C, D
 
 @inferred dispatch(foo, Dog())
 @inferred foo(Dog())
@@ -87,16 +86,15 @@ struct Dog end
 @adhoc bar(x: E) = 4
 
 struct Bear end
-@implements Bear: C
-@implements Bear: D
-@implements Bear: E
+@type Bear implements C
+@type Bear implements D
+@type Bear implements E
 
 @inferred dispatch(bar, Bear())
 @inferred bar(Bear())
 
 struct Fish end
-@implements Fish: C
-@implements Fish: D
+@type Fish implements C, D
 
 @inferred dispatch(bar, Fish())
 
@@ -108,27 +106,25 @@ struct Fish end
 @adhoc asdf(x: H) = 3
 
 struct Squid end
-@implements Squid: B
-@implements Squid: D
+@type Squid implements B, D
 
 @inferred dispatch(asdf, Squid())
 @inferred asdf(Squid())
 
 struct Crow end
-@implements Crow: B
-@implements Crow: H
+@type Crow implements B
+@type Crow implements H
 
 @inferred dispatch(asdf, Crow())
 
 struct Raven end
-@implements Raven: B
-@implements Raven: E
+@type Raven implements B, E
 
 @inferred dispatch(asdf, Raven())
 @inferred asdf(Raven())
 
 struct Goat end
-@implements Goat: H
+@type Goat implements H
 
 @inferred dispatch(asdf, Goat())
 @inferred asdf(Goat())
@@ -142,28 +138,26 @@ struct Goat end
 @adhoc qwer(x: D) = 4
 
 struct Lizard end
-@implements Lizard: A
-@implements Lizard: B
-@implements Lizard: C
+@type Lizard implements A, B, C
 
 @inferred dispatch(qwer, Lizard())
 @inferred qwer(Lizard())
 
 struct Toad end
-@implements Toad: B
-@implements Toad: C
-@implements Toad: D
+@type Toad implements B
+@type Toad implements C
+@type Toad implements D
 
 @inferred dispatch(qwer, Toad())
 
 struct Rabbit end
-@implements Rabbit: A
+@type Rabbit implements A
 
 @inferred dispatch(qwer, Rabbit())
 @inferred qwer(Rabbit())
 
 struct Eagle end
-@implements Eagle: B
+@type Eagle implements B
 
 @inferred dispatch(qwer, Eagle())
 @inferred qwer(Eagle())

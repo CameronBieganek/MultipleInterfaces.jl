@@ -66,15 +66,14 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
     @adhoc foo(x: F) = 4
 
     struct Cat end
-    @implements Cat: B
-    @implements Cat: E
+    @type Cat implements B
+    @type Cat implements E
 
     @test dispatch(foo, Cat()) == E()
     @test foo(Cat()) == 3
 
     struct Dog end
-    @implements Dog: C
-    @implements Dog: D
+    @type Dog implements C, D
 
     @test dispatch(foo, Dog()) == C()
     @test foo(Dog()) == 2
@@ -88,16 +87,14 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
     @adhoc bar(x: E) = 4
 
     struct Bear end
-    @implements Bear: C
-    @implements Bear: D
-    @implements Bear: E
+    @type Bear implements C
+    @type Bear implements D, E
 
     @test dispatch(bar, Bear()) == E()
     @test bar(Bear()) == 4
 
     struct Fish end
-    @implements Fish: C
-    @implements Fish: D
+    @type Fish implements C, D
 
     @test dispatch(bar, Fish()) == SpecificityAmbiguity()
     @test_throws InterfaceDispatchError bar(Fish())
@@ -110,28 +107,26 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
     @adhoc asdf(x: H) = 3
 
     struct Squid end
-    @implements Squid: B
-    @implements Squid: D
+    @type Squid implements B
+    @type Squid implements D
 
     @test dispatch(asdf, Squid()) == D()
     @test asdf(Squid()) == 2
 
     struct Crow end
-    @implements Crow: B
-    @implements Crow: H
+    @type Crow implements B, H
 
     @test dispatch(asdf, Crow()) == SpecificityAmbiguity()
     @test_throws InterfaceDispatchError asdf(Crow())
 
     struct Raven end
-    @implements Raven: B
-    @implements Raven: E
+    @type Raven implements B, E
 
     @test dispatch(asdf, Raven()) == D()
     @test asdf(Raven()) == 2
 
     struct Goat end
-    @implements Goat: H
+    @type Goat implements H
 
     @test dispatch(asdf, Goat()) == H()
     @test asdf(Goat()) == 3
@@ -145,29 +140,27 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
     @adhoc qwer(x: D) = 4
 
     struct Lizard end
-    @implements Lizard: A
-    @implements Lizard: B
-    @implements Lizard: C
+    @type Lizard implements A, B, C
 
     @test dispatch(qwer, Lizard()) == C()
     @test qwer(Lizard()) == 3
 
     struct Toad end
-    @implements Toad: B
-    @implements Toad: C
-    @implements Toad: D
+    @type Toad implements B
+    @type Toad implements C
+    @type Toad implements D
 
     @test dispatch(qwer, Toad()) == SpecificityAmbiguity()
     @test_throws InterfaceDispatchError qwer(Toad())
 
     struct Rabbit end
-    @implements Rabbit: A
+    @type Rabbit implements A
 
     @test dispatch(qwer, Rabbit()) == A()
     @test qwer(Rabbit()) == 1
 
     struct Eagle end
-    @implements Eagle: B
+    @type Eagle implements B
 
     @test dispatch(qwer, Eagle()) == B()
     @test qwer(Eagle()) == 2
@@ -188,7 +181,7 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
     @adhoc baz(x: J) = 1
 
     struct Turtle end
-    @implements Turtle: L
+    @type Turtle implements L
 
     @test dispatch(baz, Turtle()) == J()
     @test baz(Turtle()) == 1
@@ -219,8 +212,8 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
     @adhoc bbb(x: R) = 4
 
     struct Frog end
-    @implements Frog: N
-    @implements Frog: Q
+    @type Frog implements N
+    @type Frog implements Q
 
     @test dispatch(bbb, Frog()) == P()
     @test bbb(Frog()) == 3
