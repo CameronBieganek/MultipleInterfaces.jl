@@ -15,9 +15,9 @@ using Test
         a2
     end
 
-    @test A() == A()
+    @test A() === A()
     @test superinterfaces(A()) == ()
-    @test required_methods(A()) == (a1, a2)
+    @test issetequal(required_methods(A()), (a1, a2))
 
     function b1 end
     function b2 end
@@ -27,9 +27,9 @@ using Test
         b2
     end
 
-    @test B() == B()
+    @test B() === B()
     @test superinterfaces(B()) == ()
-    @test required_methods(B()) == (b1, b2)
+    @test issetequal(required_methods(B()), (b1, b2))
 
     function c1 end
 
@@ -37,8 +37,8 @@ using Test
         c1
     end
 
-    @test C() == C()
-    @test superinterfaces(C()) == (A(), B())
+    @test C() === C()
+    @test issetequal(superinterfaces(C()),  (A(), B()))
     @test required_methods(C()) == (c1, )
 
     function d1 end
@@ -47,8 +47,8 @@ using Test
         d1
     end
 
-    @test D() == D()
-    @test superinterfaces(D()) == (C(), )
+    @test D() === D()
+    @test issetequal(superinterfaces(D()), (C(), ))
     @test required_methods(D()) == (d1, )
 
     function e1 end
