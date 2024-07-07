@@ -18,11 +18,9 @@ in_tuple(::T, t::Tuple{T, Vararg}) where {T} = true
 in_tuple(_, t::Tuple{}) = false
 
 
-# Might need `Base.@assume_effects :total` on this one, unless
-# I can figure out a different way to make sure it compiles away.
 delete(t::Tuple, x) = _delete(x, (), t)
 
-Base.@assume_effects :total function _delete(
+Base.@assume_effects :foldable function _delete(
     x::S,
     left::Tuple,
     right::Tuple{T, Vararg}
@@ -75,7 +73,7 @@ end
 most_specific(xs::Tuple{Any}) = xs[1]
 most_specific(xs::Tuple) = _most_specific((), xs)
 
-Base.@assume_effects :total function _most_specific(left::Tuple, right::Tuple)
+Base.@assume_effects :foldable function _most_specific(left::Tuple, right::Tuple)
     x = right[1]
     rest = tail(right)
     if is_subinterface_all(x, (left..., rest...))
