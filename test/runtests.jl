@@ -4,8 +4,6 @@ using Test
 
 @testset "ExtendableInterfaces.jl" begin
     include("interface.jl")
-    include("adhoc.jl")
-    include("implements.jl")
     include("dispatch.jl")
 end
 

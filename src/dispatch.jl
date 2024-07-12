@@ -1,42 +1,106 @@
 
 
-tail(::Tuple{Any}) = ()
+struct SpecificityAmbiguity end
 
-# This implementation of `tail` (which differs from `Base.tail`) was provided
-# by Neven Sajko. See this Discourse post:
-# https://discourse.julialang.org/t/compiler-recursion-limit/112698/8
-function tail(x::Tuple{Any, Vararg{Any, N}}) where {N}
-    f = let x = x
-        i -> x[i + 1]
+
+struct InterfaceDispatchError <: Exception
+    fname::String
+    obj
+end
+
+function Base.showerror(io::IO, e::InterfaceDispatchError)
+    msg = (
+        """
+        There is no unique most-specific interface among the intersection of \
+        the interfaces that `$(e.fname)` dispatches on and the interfaces that \
+        the `$(typeof(e.obj))` type implements. This usually indicates that a \
+        more specific ad hoc polymorphic method should be implemented for `$(e.fname)` \
+        either by the owner of `$(e.fname)` or the owner(s) of the interfaces that \
+        `$(e.fname)` dispatches on.
+        """
+    )
+    print(io, msg)
+end
+
+
+uname(name::Symbol) = Symbol(string("_", name))
+
+
+# TODO: See if I can figure out a reasonable way to avoid needing the `@declare` macro.
+# Maybe I can use `@isdefined` to check if the top level method is defined.
+macro declare(func)
+    fname = func.args[1]
+    fname_str = String(fname)
+    _fname = uname(fname)
+    argname = func.args[2].args[2]
+
+    if func.args[2].args[3] !== :_
+        error(
+            "Use an `_` placeholder to indicate arguments that dispatch on an ",
+            "interface, like `foo(x: _)`."
+        )
     end
-    ntuple(f, Val(N))::NTuple{N, Any}
+
+    ex = quote
+        function $fname($argname)
+            $_fname(ExtendableInterfaces.dispatch($fname, $argname), $argname)
+        end
+
+        function $_fname(::ExtendableInterfaces.SpecificityAmbiguity, $argname)
+            throw(InterfaceDispatchError($fname_str, $argname))
+        end
+
+        # An `@declare` call should return nothing.
+        nothing
+    end
+
+    esc(ex)
 end
 
 
-in_tuple(x::S, t::Tuple{T, Vararg}) where {S, T} = in_tuple(x, tail(t))
-in_tuple(::T, t::Tuple{T, Vararg}) where {T} = true
-in_tuple(_, t::Tuple{}) = false
+adhoc_methods(::Any) = ()
 
 
-delete(t::Tuple, x) = _delete(x, (), t)
+macro adhoc(fdef)
+    # For now assume the single-line form of function definition.
+    signature = fdef.args[1]
+    body = fdef.args[2]
+    colon = signature.args[2]
 
-Base.@assume_effects :foldable function _delete(
-    x::S,
-    left::Tuple,
-    right::Tuple{T, Vararg}
-) where {S, T}
-    _delete(x, (left..., right[1]), tail(right))
+    fname = signature.args[1]
+    _fname = uname(fname)
+
+    argname = colon.args[2]
+    interface = colon.args[3]
+
+    ex = quote
+        if @isdefined $fname
+            # It's important to have this before the `let` block, so that if the interface
+            # is undefined we get an `UndefVarError` before the `let` block is run. Otherwise
+            # a user could call this macro and get an error, but the `let` block has already
+            # updated `adhoc_methods`.
+            $_fname(::$interface, $argname) = $(body.args...)
+
+            let
+                signatures = ExtendableInterfaces.adhoc_methods($fname)
+
+                function ExtendableInterfaces.adhoc_methods(::typeof($fname))
+                    (signatures..., $interface())
+                end
+            end
+
+            # Function definitions return the generic function:
+            $fname
+        else
+            error(
+                "Ad hoc polymorphic functions must be declared with `@declare` before ",
+                "methods are declared with `@adhoc`."
+            )
+        end
+    end
+
+    esc(ex)
 end
-
-_delete(::T, left::Tuple, right::Tuple{T, Vararg}) where {T} = (left..., tail(right)...)
-_delete(_, left::Tuple, right::Tuple{}) = left
-
-# TODO: Figure out if this commented function helps inference by
-# returning one function call earlier.
-#
-# function _delete(x::S, left::Tuple, right::Tuple{T}) where {S, T}
-#     (left..., right[1])
-# end
 
 
 function visit_interface(interface, visited::Tuple, targets::Tuple)

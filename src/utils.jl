@@ -1,8 +1,5 @@
 
 
-abstract type Interface end
-
-
 # This function assumes that `s` and `t` do not contain any duplicates.
 tuple_intersect(s::Tuple, t::Tuple) = _tuple_intersect((), s, t)
 
@@ -35,6 +32,38 @@ end
 _tuple_union(out::Tuple, ::Tuple, ::Tuple{}) = out
 
 
+tail(::Tuple{Any}) = ()
+
+# This implementation of `tail` (which differs from `Base.tail`) was provided
+# by Neven Sajko. See this Discourse post:
+# https://discourse.julialang.org/t/compiler-recursion-limit/112698/8
+function tail(x::Tuple{Any, Vararg{Any, N}}) where {N}
+    f = let x = x
+        i -> x[i + 1]
+    end
+    ntuple(f, Val(N))::NTuple{N, Any}
+end
+
+
+in_tuple(x::S, t::Tuple{T, Vararg}) where {S, T} = in_tuple(x, tail(t))
+in_tuple(::T, t::Tuple{T, Vararg}) where {T} = true
+in_tuple(_, t::Tuple{}) = false
+
+
+delete(t::Tuple, x) = _delete(x, (), t)
+
+Base.@assume_effects :foldable function _delete(
+    x::S,
+    left::Tuple,
+    right::Tuple{T, Vararg}
+) where {S, T}
+    _delete(x, (left..., right[1]), tail(right))
+end
+
+_delete(::T, left::Tuple, right::Tuple{T, Vararg}) where {T} = (left..., tail(right)...)
+_delete(_, left::Tuple, right::Tuple{}) = left
+
+
 # This function is not part of the dispatch machinery, so it does not need to compile away.
 # This function returns all (possibly transitive) superinterfaces of
 # `interface`, including `interface`.
@@ -53,46 +82,4 @@ function ancestors(interface::Interface)
     end
 
     visited
-end
-
-
-implements(::Type{T}) where {T} = ()
-implements(::T) where {T} = implements(T)
-
-
-function throw_type_macro_syntax_error()
-    throw(ArgumentError(
-        "Syntax error in `@type`. To declare that type `Foo` implements interfaces" *
-        "`A` and `B`, write `@type implements A, B`."
-    ))
-end
-
-
-function update_implemented(::Type{T}, new_impls::Tuple) where {T}
-    foldl(new_impls; init=implements(T)) do implemented, new_impl
-        tuple_union(implemented, ancestors(new_impl))
-    end
-end
-
-
-macro type(type, implements::Symbol, interfaces_ex)
-    type = esc(type)
-
-    implements != :implements && throw_type_macro_syntax_error()
-
-    if interfaces_ex isa Symbol
-        interface_syms = [interfaces_ex]
-    else
-        interfaces_ex.head != :tuple && throw_type_macro_syntax_error()
-        interface_syms = interfaces_ex.args
-    end
-
-    interfaces = map(sym -> :($(esc(sym))()), interface_syms)
-
-    quote
-        let
-            implemented = update_implemented($type, tuple($(interfaces...)))
-            ExtendableInterfaces.implements(::Type{$type}) = implemented
-        end
-    end
 end
