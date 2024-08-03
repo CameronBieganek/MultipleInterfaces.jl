@@ -143,7 +143,7 @@ macro type(type, implements::Symbol, interfaces_ex)
 
     quote
         let
-            implemented = update_implemented($type, tuple($(interfaces...)))
+            implemented = update_implemented($type, ($(interfaces...), ))
             ExtendableInterfaces.implements(::Type{$type}) = implemented
         end
     end
