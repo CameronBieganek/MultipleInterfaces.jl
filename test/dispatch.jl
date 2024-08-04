@@ -3,22 +3,115 @@
 module AdhocMacroTests
 
 using ExtendableInterfaces
+using ExtendableInterfaces: signatures, interface_dispatches, InterfaceArg
 using Test
 
-@testset "@declare and @adhoc" begin
 
-    out = @declare foo(a: _)
-    @test isnothing(out)
-    @test ExtendableInterfaces.adhoc_methods(foo) == ()
+function a end
+function b end
+function h end
 
-    function a end
-    @interface A begin
-        a
-    end
+@interface A begin
+    a
+end
 
-    out = @adhoc foo(a: A, b) = a + b
-    @test out == foo
-    @test ExtendableInterfaces.adhoc_methods(foo) == (A(), )
+@interface B begin
+    b
+end
+
+# Isolated node in interface DAG.
+@interface H begin
+    h
+end
+
+@interface C extends A, B
+@interface D extends B
+@interface E extends C, D
+@interface F extends E
+@interface G extends F
+
+
+@testset "@imethod" begin
+
+    @imethod foo(a::Int, b: A, c::String, d: B) = 42
+
+    @test length(methods(foo)) == 1
+    @test signatures(foo) == [
+        (Int, InterfaceArg, String, InterfaceArg)
+    ]
+    idispatches = interface_dispatches(foo, Int, InterfaceArg, String, InterfaceArg)
+    @test issetequal(idispatches[1], (A(), ))
+    @test issetequal(idispatches[2], (B(), ))
+
+
+    @imethod foo(a::Int, b: A, c::String, d: C) = 42
+
+    @test length(methods(foo)) == 1
+    @test signatures(foo) == [
+        (Int, InterfaceArg, String, InterfaceArg)
+    ]
+    idispatches = interface_dispatches(foo, Int, InterfaceArg, String, InterfaceArg)
+    @test issetequal(idispatches[1], (A(), ))
+    @test issetequal(idispatches[2], (B(), C()))
+
+
+    @imethod foo(a::Int, b: F, c::String, d: H) = 42
+
+    @test length(methods(foo)) == 1
+    @test signatures(foo) == [
+        (Int, InterfaceArg, String, InterfaceArg)
+    ]
+    idispatches = interface_dispatches(foo, Int, InterfaceArg, String, InterfaceArg)
+    @test issetequal(idispatches[1], (A(), F()))
+    @test issetequal(idispatches[2], (B(), C(), H()))
+
+
+    @imethod foo(a::Int, b: B, c::Int, d: D) = 42
+
+    @test length(methods(foo)) == 2
+    @test signatures(foo) == [
+        (Int, InterfaceArg, String, InterfaceArg),
+        (Int, InterfaceArg, Int, InterfaceArg)
+    ]
+    idispatches1 = interface_dispatches(foo, Int, InterfaceArg, String, InterfaceArg)
+    @test issetequal(idispatches1[1], (A(), F()))
+    @test issetequal(idispatches1[2], (B(), C(), H()))
+    idispatches2 = interface_dispatches(foo, Int, InterfaceArg, Int, InterfaceArg)
+    @test issetequal(idispatches2[1], (B(), ))
+    @test issetequal(idispatches2[2], (D(), ))
+
+
+    @imethod foo(a::Int, b: C, c::Int, d: F) = 42
+
+    @test length(methods(foo)) == 2
+    @test signatures(foo) == [
+        (Int, InterfaceArg, String, InterfaceArg),
+        (Int, InterfaceArg, Int, InterfaceArg)
+    ]
+    idispatches1 = interface_dispatches(foo, Int, InterfaceArg, String, InterfaceArg)
+    @test issetequal(idispatches1[1], (A(), F()))
+    @test issetequal(idispatches1[2], (B(), C(), H()))
+    idispatches2 = interface_dispatches(foo, Int, InterfaceArg, Int, InterfaceArg)
+    @test issetequal(idispatches2[1], (B(), C()))
+    @test issetequal(idispatches2[2], (D(), F()))
+
+
+    @imethod foo(a::Int, b: D, c::Int) = 42
+
+    @test length(methods(foo)) == 3
+    @test signatures(foo) == [
+        (Int, InterfaceArg, String, InterfaceArg),
+        (Int, InterfaceArg, Int, InterfaceArg),
+        (Int, InterfaceArg, Int)
+    ]
+    idispatches1 = interface_dispatches(foo, Int, InterfaceArg, String, InterfaceArg)
+    @test issetequal(idispatches1[1], (A(), F()))
+    @test issetequal(idispatches1[2], (B(), C(), H()))
+    idispatches2 = interface_dispatches(foo, Int, InterfaceArg, Int, InterfaceArg)
+    @test issetequal(idispatches2[1], (B(), C()))
+    @test issetequal(idispatches2[2], (D(), F()))
+    idispatches3 = interface_dispatches(foo, Int, InterfaceArg, Int)
+    @test issetequal(idispatches3[1], (D(), ))
 
 end
 
@@ -84,11 +177,10 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
 
 
     # ---- foo ----
-    @declare foo(x: _)
-    @adhoc foo(x: B) = 1
-    @adhoc foo(x: C) = 2
-    @adhoc foo(x: E) = 3
-    @adhoc foo(x: F) = 4
+    @imethod foo(x: B) = 1
+    @imethod foo(x: C) = 2
+    @imethod foo(x: E) = 3
+    @imethod foo(x: F) = 4
 
     struct Cat end
     @type Cat implements B
@@ -105,11 +197,10 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
 
 
     # ---- bar ----
-    @declare bar(x: _)
-    @adhoc bar(x: A) = 1
-    @adhoc bar(x: C) = 2
-    @adhoc bar(x: D) = 3
-    @adhoc bar(x: E) = 4
+    @imethod bar(x: A) = 1
+    @imethod bar(x: C) = 2
+    @imethod bar(x: D) = 3
+    @imethod bar(x: E) = 4
 
     struct Bear end
     @type Bear implements C
@@ -126,10 +217,9 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
 
 
     # ---- asdf ----
-    @declare asdf(x: _)
-    @adhoc asdf(x: B) = 1
-    @adhoc asdf(x: D) = 2
-    @adhoc asdf(x: H) = 3
+    @imethod asdf(x: B) = 1
+    @imethod asdf(x: D) = 2
+    @imethod asdf(x: H) = 3
 
     struct Squid end
     @type Squid implements B
@@ -158,11 +248,10 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
 
 
     # ---- qwer ----
-    @declare qwer(x: _)
-    @adhoc qwer(x: A) = 1
-    @adhoc qwer(x: B) = 2
-    @adhoc qwer(x: C) = 3
-    @adhoc qwer(x: D) = 4
+    @imethod qwer(x: A) = 1
+    @imethod qwer(x: B) = 2
+    @imethod qwer(x: C) = 3
+    @imethod qwer(x: D) = 4
 
     struct Lizard end
     @type Lizard implements A, B, C
@@ -202,8 +291,7 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
     @interface K begin k end
     @interface L extends J, K
 
-    @declare baz(x: _)
-    @adhoc baz(x: J) = 1
+    @imethod baz(x: J) = 1
 
     struct Turtle end
     @type Turtle implements L
@@ -211,9 +299,8 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
     @test dispatch(baz, Turtle()) == J()
     @test baz(Turtle()) == 1
 
-    @declare aaa(x: _)
-    @adhoc aaa(x: J) = 1
-    @adhoc aaa(x: K) = 2
+    @imethod aaa(x: J) = 1
+    @imethod aaa(x: K) = 2
 
     @test dispatch(aaa, Turtle()) == SpecificityAmbiguity()
     @test_throws InterfaceDispatchError aaa(Turtle())
@@ -230,11 +317,10 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
     @interface R begin r end
     @interface S extends R
 
-    @declare bbb(x: _)
-    @adhoc bbb(x: M) = 1
-    @adhoc bbb(x: O) = 2
-    @adhoc bbb(x: P) = 3
-    @adhoc bbb(x: R) = 4
+    @imethod bbb(x: M) = 1
+    @imethod bbb(x: O) = 2
+    @imethod bbb(x: P) = 3
+    @imethod bbb(x: R) = 4
 
     struct Frog end
     @type Frog implements N

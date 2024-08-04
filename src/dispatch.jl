@@ -3,11 +3,12 @@
 struct SpecificityAmbiguity end
 
 
-struct InterfaceDispatchError{F} <: Exception
+struct InterfaceDispatchError{F, O} <: Exception
     f::F
-    obj
+    obj::O
 end
 
+# TODO: Update this mulltiple-interface dispatch.
 function Base.showerror(io::IO, e::InterfaceDispatchError)
     msg = (
         """
@@ -23,45 +24,36 @@ function Base.showerror(io::IO, e::InterfaceDispatchError)
 end
 
 
-# TODO: See if I can figure out a reasonable way to avoid needing the `@declare` macro.
-# Maybe I can use `@isdefined` to check if the top level method is defined.
-# macro declare(func)
-#     fname = func.args[1]
-#     fname_str = String(fname)
-#     _fname = uname(fname)
-#     argname = func.args[2].args[2]
-
-#     if func.args[2].args[3] !== :_
-#         error(
-#             "Use an `_` placeholder to indicate arguments that dispatch on an ",
-#             "interface, like `foo(x: _)`."
-#         )
-#     end
-
-#     ex = quote
-#         function $fname($argname)
-#             $_fname(ExtendableInterfaces.dispatch($fname, $argname), $argname)
-#         end
-
-#         function $_fname(::ExtendableInterfaces.SpecificityAmbiguity, $argname)
-#             throw(InterfaceDispatchError($fname_str, $argname))
-#         end
-
-#         # An `@declare` call should return nothing.
-#         nothing
-#     end
-
-#     esc(ex)
-# end
-
-
-argument_dispatches(f) = ()
 signatures(f) = Tuple[]
 is_signature_defined(f, signature) = (signature in signatures(f))
 
 
+# We have to make this a vararg here instead of taking a tuple of types, because
+# the tuple `(Int, InterfaceArg(), String, InterfaceArg())` and
+# the tuple `(Float64, InterfaceArg(), Char, InterfaceArg())` have the same type,
+# namely `(DataType, DataType, DataType, DataType)`, so we wouldn't be able
+# to distinguish between those two signatures.
+interface_dispatches(f, arg_types...) = ()
+
+
 struct InterfaceArg end
 struct TypeArg end
+
+
+function update_interface_dispatches(::Tuple{}, interface_args_interfaces::Tuple)
+    map(i -> (i, ), interface_args_interfaces)
+end
+
+
+function update_interface_dispatches(dispatches::Tuple, interface_args_interfaces::Tuple)
+    map(dispatches, interface_args_interfaces) do arg_dispaches, interface
+        if in_tuple(interface, arg_dispaches)
+            arg_dispaches
+        else
+            (arg_dispaches..., interface)
+        end
+    end
+end
 
 
 macro imethod(fdef)
@@ -91,6 +83,7 @@ macro imethod(fdef)
     _fname = Symbol("imethod#$fname$signature_str")
 
     # TODO: There seems to be a lot of duplication of code here. See if I can simplify.
+    # I should probably just use a single for loop to build up most of the vectors.
 
     symbolic_signature = map(signature_args) do ex
         if ex isa Symbol
@@ -127,6 +120,8 @@ macro imethod(fdef)
     end
 
     interface_argnames = map(ex -> ex.args[2], interface_args)
+    interface_args_interface_types = map(ex -> ex.args[3], interface_args)
+    interface_args_interface_objs = map(ex -> :($(ex.args[3])()), interface_args)
 
     argnames = map(signature_args) do ex
         if ex isa Symbol
@@ -142,22 +137,27 @@ macro imethod(fdef)
         end
     end
 
-    inverse_signature_vec = map(signature_args) do ex
-        if ex isa Symbol
-            :(ExtendableInterfaces.TypeArg)
-        elseif ex.head == :(::)
-            :(ExtendableInterfaces.TypeArg)
-        elseif ex.head == :call
-            if ex.args[1] == :(:) && ex.args[2] isa Symbol && ex.args[3] isa Symbol
-                ex.args[3]
-            else
-                error("Syntax error.")
-            end
+    interface_dispatches_call_ex = :(ExtendableInterfaces.interface_dispatches($fname))
+
+    for el in symbolic_signature
+        if el == :(ExtendableInterfaces.InterfaceArg)
+            push!(interface_dispatches_call_ex.args, :(ExtendableInterfaces.InterfaceArg))
+        else
+            push!(interface_dispatches_call_ex.args, el)
         end
     end
 
+    interface_dispatches_def_ex = :(ExtendableInterfaces.interface_dispatches(::typeof($fname)))
+
+    for el in symbolic_signature
+        push!(interface_dispatches_def_ex.args, :(::Type{$el}))
+    end
+
     ex = quote
-        if !is_signature_defined($fname, ($(symbolic_signature...), ))
+        if (
+            !(@isdefined $fname) ||
+            !ExtendableInterfaces.is_signature_defined($fname, ($(symbolic_signature...), ))
+        )
             function $fname($(normalized_signature...))
                 $_fname(
                     ExtendableInterfaces.dispatch($fname, $(interface_argnames...)),
@@ -165,31 +165,29 @@ macro imethod(fdef)
                 )
             end
             function $_fname(::ExtendableInterfaces.SpecificityAmbiguity, $(argnames...))
-                throw(InterfaceDispatchError($fname, nothing))
+                throw(ExtendableInterfaces.InterfaceDispatchError($fname, nothing))
+            end
+            let
+                signatures = ExtendableInterfaces.signatures($fname)
+                push!(signatures, ($(symbolic_signature...), ))
+                ExtendableInterfaces.signatures(::typeof($fname)) = signatures
             end
         end
-        $_fname(::Tuple{$(inverse_signature_vec...)}, $(argnames...)) = $(body.args...)
+        $_fname(::Tuple{$(interface_args_interface_types...)}, $(argnames...)) = $(body.args...)
 
-        # argument_dispatches()
         let
-            dispatches = ExtendableInterfaces.argument_dispatches($fname)
-            updated_dispatches = update_argument_dispatches(dispatches, qqqq)
-            ExtendableInterfaces.argument_dispatches(::typeof($fname)) = updated_dispatches
-        end
-
-        # signatures()
-        let
-            signatures = ExtendableInterfaces.signatures($fname)
-            push!(signatures, $inverse_signature_vec)
-            function ExtendableInterfaces.signatures(::typeof($fname))
-                (signatures..., $interface())
-            end
+            dispatches = $interface_dispatches_call_ex
+            updated_dispatches = ExtendableInterfaces.update_interface_dispatches(
+                dispatches, ($(interface_args_interface_objs...), )
+            )
+            $interface_dispatches_def_ex = updated_dispatches
         end
 
         # Function definitions return the generic function:
         $fname
     end
 
+    # TODO: Use `esc` more surgically.
     esc(ex)
 end
 
