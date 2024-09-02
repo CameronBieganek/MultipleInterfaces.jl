@@ -88,16 +88,19 @@ using ExtendableInterfaces
     struct Dog end
     struct Fox end
     struct Alligator end
+    struct Crocodile end
 
     @type Cat implements A
     @type Dog implements B
     @type Fox implements A, B
     @type Alligator implements A, B, C
+    @type Crocodile implements C
 
     @test implements(Cat) == (A(), )
     @test implements(Dog) == (B(), )
     @test issetequal(implements(Fox), (A(), B()))
     @test issetequal(implements(Alligator), (A(), B(), C()))
+    @test issetequal(implements(Crocodile), (A(), B(), C()))
 
 end
 
