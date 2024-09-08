@@ -56,7 +56,7 @@ function update_interface_dispatches(dispatches::Tuple, interface_args_interface
 end
 
 
-macro imethod(fdef)
+macro idispatch(fdef)
     # For now assume the single-line form of function definition.
     signature_ex = fdef.args[1]
     body = fdef.args[2]
@@ -80,7 +80,7 @@ macro imethod(fdef)
 
     signature_str = "(" * join(signature_vec, ",") * ")"
 
-    _fname = Symbol("imethod#$fname$signature_str")
+    _fname = Symbol("idispatch#$fname$signature_str")
 
     # TODO: There seems to be a lot of duplication of code here. See if I can simplify.
     # I should probably just use a single for loop to build up most of the vectors.

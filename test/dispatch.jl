@@ -31,9 +31,9 @@ end
 @interface G extends F
 
 
-@testset "@imethod" begin
+@testset "@idispatch" begin
 
-    @imethod foo(a::Int, b: A, c::String, d: B) = 42
+    @idispatch foo(a::Int, b: A, c::String, d: B) = 42
 
     @test length(methods(foo)) == 1
     @test signatures(foo) == [
@@ -44,7 +44,7 @@ end
     @test issetequal(idispatches[2], (B(), ))
 
 
-    @imethod foo(a::Int, b: A, c::String, d: C) = 42
+    @idispatch foo(a::Int, b: A, c::String, d: C) = 42
 
     @test length(methods(foo)) == 1
     @test signatures(foo) == [
@@ -55,7 +55,7 @@ end
     @test issetequal(idispatches[2], (B(), C()))
 
 
-    @imethod foo(a::Int, b: F, c::String, d: H) = 42
+    @idispatch foo(a::Int, b: F, c::String, d: H) = 42
 
     @test length(methods(foo)) == 1
     @test signatures(foo) == [
@@ -66,7 +66,7 @@ end
     @test issetequal(idispatches[2], (B(), C(), H()))
 
 
-    @imethod foo(a::Int, b: B, c::Int, d: D) = 42
+    @idispatch foo(a::Int, b: B, c::Int, d: D) = 42
 
     @test length(methods(foo)) == 2
     @test issetequal(signatures(foo), [
@@ -81,7 +81,7 @@ end
     @test issetequal(idispatches2[2], (D(), ))
 
 
-    @imethod foo(a::Int, b: C, c::Int, d: F) = 42
+    @idispatch foo(a::Int, b: C, c::Int, d: F) = 42
 
     @test length(methods(foo)) == 2
     @test issetequal(signatures(foo), [
@@ -96,7 +96,7 @@ end
     @test issetequal(idispatches2[2], (D(), F()))
 
 
-    @imethod foo(a::Int, b: D, c::Int) = 42
+    @idispatch foo(a::Int, b: D, c::Int) = 42
 
     @test length(methods(foo)) == 3
     @test issetequal(signatures(foo), [
@@ -177,10 +177,10 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
 
 
     # ---- foo ----
-    @imethod foo(x: B) = 1
-    @imethod foo(x: C) = 2
-    @imethod foo(x: E) = 3
-    @imethod foo(x: F) = 4
+    @idispatch foo(x: B) = 1
+    @idispatch foo(x: C) = 2
+    @idispatch foo(x: E) = 3
+    @idispatch foo(x: F) = 4
 
     struct Cat end
     @type Cat implements B
@@ -197,10 +197,10 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
 
 
     # ---- bar ----
-    @imethod bar(x: A) = 1
-    @imethod bar(x: C) = 2
-    @imethod bar(x: D) = 3
-    @imethod bar(x: E) = 4
+    @idispatch bar(x: A) = 1
+    @idispatch bar(x: C) = 2
+    @idispatch bar(x: D) = 3
+    @idispatch bar(x: E) = 4
 
     struct Bear end
     @type Bear implements C
@@ -217,9 +217,9 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
 
 
     # ---- asdf ----
-    @imethod asdf(x: B) = 1
-    @imethod asdf(x: D) = 2
-    @imethod asdf(x: H) = 3
+    @idispatch asdf(x: B) = 1
+    @idispatch asdf(x: D) = 2
+    @idispatch asdf(x: H) = 3
 
     struct Squid end
     @type Squid implements B
@@ -248,10 +248,10 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
 
 
     # ---- qwer ----
-    @imethod qwer(x: A) = 1
-    @imethod qwer(x: B) = 2
-    @imethod qwer(x: C) = 3
-    @imethod qwer(x: D) = 4
+    @idispatch qwer(x: A) = 1
+    @idispatch qwer(x: B) = 2
+    @idispatch qwer(x: C) = 3
+    @idispatch qwer(x: D) = 4
 
     struct Lizard end
     @type Lizard implements A, B, C
@@ -291,7 +291,7 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
     @interface K begin k end
     @interface L extends J, K
 
-    @imethod baz(x: J) = 1
+    @idispatch baz(x: J) = 1
 
     struct Turtle end
     @type Turtle implements L
@@ -299,8 +299,8 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
     @test dispatch(baz, Turtle()) == J()
     @test baz(Turtle()) == 1
 
-    @imethod aaa(x: J) = 1
-    @imethod aaa(x: K) = 2
+    @idispatch aaa(x: J) = 1
+    @idispatch aaa(x: K) = 2
 
     @test dispatch(aaa, Turtle()) == SpecificityAmbiguity()
     @test_throws InterfaceDispatchError aaa(Turtle())
@@ -317,10 +317,10 @@ using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
     @interface R begin r end
     @interface S extends R
 
-    @imethod bbb(x: M) = 1
-    @imethod bbb(x: O) = 2
-    @imethod bbb(x: P) = 3
-    @imethod bbb(x: R) = 4
+    @idispatch bbb(x: M) = 1
+    @idispatch bbb(x: O) = 2
+    @idispatch bbb(x: P) = 3
+    @idispatch bbb(x: R) = 4
 
     struct Frog end
     @type Frog implements N

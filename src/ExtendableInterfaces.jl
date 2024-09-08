@@ -2,7 +2,7 @@
 
 module ExtendableInterfaces
 
-export @imethod, @interface, @type
+export @idispatch, @interface, @type
 export implements, required_methods, superinterfaces
 export Interface, InterfaceDispatchError
 
