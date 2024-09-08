@@ -69,10 +69,10 @@ end
     @imethod foo(a::Int, b: B, c::Int, d: D) = 42
 
     @test length(methods(foo)) == 2
-    @test signatures(foo) == [
+    @test issetequal(signatures(foo), [
         (Int, InterfaceArg, String, InterfaceArg),
         (Int, InterfaceArg, Int, InterfaceArg)
-    ]
+    ])
     idispatches1 = interface_dispatches(foo, Int, InterfaceArg, String, InterfaceArg)
     @test issetequal(idispatches1[1], (A(), F()))
     @test issetequal(idispatches1[2], (B(), C(), H()))
@@ -84,10 +84,10 @@ end
     @imethod foo(a::Int, b: C, c::Int, d: F) = 42
 
     @test length(methods(foo)) == 2
-    @test signatures(foo) == [
+    @test issetequal(signatures(foo), [
         (Int, InterfaceArg, String, InterfaceArg),
         (Int, InterfaceArg, Int, InterfaceArg)
-    ]
+    ])
     idispatches1 = interface_dispatches(foo, Int, InterfaceArg, String, InterfaceArg)
     @test issetequal(idispatches1[1], (A(), F()))
     @test issetequal(idispatches1[2], (B(), C(), H()))
@@ -99,11 +99,11 @@ end
     @imethod foo(a::Int, b: D, c::Int) = 42
 
     @test length(methods(foo)) == 3
-    @test signatures(foo) == [
+    @test issetequal(signatures(foo), [
         (Int, InterfaceArg, String, InterfaceArg),
         (Int, InterfaceArg, Int, InterfaceArg),
         (Int, InterfaceArg, Int)
-    ]
+    ])
     idispatches1 = interface_dispatches(foo, Int, InterfaceArg, String, InterfaceArg)
     @test issetequal(idispatches1[1], (A(), F()))
     @test issetequal(idispatches1[2], (B(), C(), H()))
