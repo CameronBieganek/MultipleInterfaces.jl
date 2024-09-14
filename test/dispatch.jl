@@ -3,7 +3,8 @@
 module AdhocMacroTests
 
 using ExtendableInterfaces
-using ExtendableInterfaces: signatures, interface_args_dispatches, InterfaceArg
+using ExtendableInterfaces: signatures, interface_args_dispatches
+using ExtendableInterfaces: interface_signatures, InterfaceArg
 using Test
 
 
@@ -42,6 +43,7 @@ end
     idispatches = interface_args_dispatches(foo, Int, InterfaceArg, String, InterfaceArg)
     @test issetequal(idispatches[1], (A(), ))
     @test issetequal(idispatches[2], (B(), ))
+    @test interface_signatures(foo, Int, InterfaceArg, String, InterfaceArg) == ((A(), B()), )
 
 
     @idispatch foo(a::Int, b: A, c::String, d: C) = 42
@@ -53,6 +55,13 @@ end
     idispatches = interface_args_dispatches(foo, Int, InterfaceArg, String, InterfaceArg)
     @test issetequal(idispatches[1], (A(), ))
     @test issetequal(idispatches[2], (B(), C()))
+    @test issetequal(
+        interface_signatures(foo, Int, InterfaceArg, String, InterfaceArg),
+        (
+            (A(), B()),
+            (A(), C())
+        )
+    )
 
 
     @idispatch foo(a::Int, b: F, c::String, d: H) = 42
@@ -64,6 +73,14 @@ end
     idispatches = interface_args_dispatches(foo, Int, InterfaceArg, String, InterfaceArg)
     @test issetequal(idispatches[1], (A(), F()))
     @test issetequal(idispatches[2], (B(), C(), H()))
+    @test issetequal(
+        interface_signatures(foo, Int, InterfaceArg, String, InterfaceArg),
+        (
+            (A(), B()),
+            (A(), C()),
+            (F(), H())
+        )
+    )
 
 
     @idispatch foo(a::Int, b: B, c::Int, d: D) = 42
@@ -79,6 +96,7 @@ end
     idispatches2 = interface_args_dispatches(foo, Int, InterfaceArg, Int, InterfaceArg)
     @test issetequal(idispatches2[1], (B(), ))
     @test issetequal(idispatches2[2], (D(), ))
+    @test interface_signatures(foo, Int, InterfaceArg, Int, InterfaceArg) == ((B(), D()), )
 
 
     @idispatch foo(a::Int, b: C, c::Int, d: F) = 42
@@ -94,6 +112,13 @@ end
     idispatches2 = interface_args_dispatches(foo, Int, InterfaceArg, Int, InterfaceArg)
     @test issetequal(idispatches2[1], (B(), C()))
     @test issetequal(idispatches2[2], (D(), F()))
+    @test issetequal(
+        interface_signatures(foo, Int, InterfaceArg, Int, InterfaceArg),
+        (
+            (B(), D()),
+            (C(), F())
+        )
+    )
 
 
     @idispatch foo(a::Int, b: D, c::Int) = 42
@@ -112,6 +137,25 @@ end
     @test issetequal(idispatches2[2], (D(), F()))
     idispatches3 = interface_args_dispatches(foo, Int, InterfaceArg, Int)
     @test issetequal(idispatches3[1], (D(), ))
+    @test interface_signatures(foo, Int, InterfaceArg, Int) == ((D(), ), )
+
+
+    # Make sure the first two interface signatures haven't been accidentally modified.
+    @test issetequal(
+        interface_signatures(foo, Int, InterfaceArg, String, InterfaceArg),
+        (
+            (A(), B()),
+            (A(), C()),
+            (F(), H())
+        )
+    )
+    @test issetequal(
+        interface_signatures(foo, Int, InterfaceArg, Int, InterfaceArg),
+        (
+            (B(), D()),
+            (C(), F())
+        )
+    )
 
 end
 

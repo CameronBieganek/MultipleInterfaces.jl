@@ -35,6 +35,11 @@ is_signature_defined(f, signature) = (signature in signatures(f))
 # to distinguish between those two signatures.
 interface_args_dispatches(f, arg_types...) = ()
 
+# The above function returns a separate tuple for each argument. This function
+# returns a tuple of signature tuples, where each signature tuple indicates the
+# interfaces that are dispatched on for one i-dispatch method.
+interface_signatures(f, arg_types...) = ()
+
 
 struct InterfaceArg end
 struct TypeArg end
@@ -137,21 +142,29 @@ macro idispatch(fdef)
         end
     end
 
-    interface_dispatches_call_ex = :(ExtendableInterfaces.interface_args_dispatches($fname))
+    interface_args_dispatches_call_ex = :(
+        ExtendableInterfaces.interface_args_dispatches($fname, $(symbolic_signature...))
+    )
 
-    for el in symbolic_signature
-        if el == :(ExtendableInterfaces.InterfaceArg)
-            push!(interface_dispatches_call_ex.args, :(ExtendableInterfaces.InterfaceArg))
-        else
-            push!(interface_dispatches_call_ex.args, el)
-        end
-    end
+    symbolic_signature_type_selectors = map(el -> :(::Type{$el}), symbolic_signature)
 
-    interface_dispatches_def_ex = :(ExtendableInterfaces.interface_args_dispatches(::typeof($fname)))
+    interface_args_dispatches_def_ex = :(
+        ExtendableInterfaces.interface_args_dispatches(
+            ::typeof($fname),
+            $(symbolic_signature_type_selectors...)
+        )
+    )
 
-    for el in symbolic_signature
-        push!(interface_dispatches_def_ex.args, :(::Type{$el}))
-    end
+    interface_signatures_call_ex = :(
+        ExtendableInterfaces.interface_signatures($fname, $(symbolic_signature...))
+    )
+
+    interface_signatures_def_ex = :(
+        ExtendableInterfaces.interface_signatures(
+            ::typeof($fname),
+            $(symbolic_signature_type_selectors...)
+        )
+    )
 
     ex = quote
         if (
@@ -176,11 +189,17 @@ macro idispatch(fdef)
         $_fname(::Tuple{$(interface_args_interface_types...)}, $(argnames...)) = $(body.args...)
 
         let
-            dispatches = $interface_dispatches_call_ex
+            dispatches = $interface_args_dispatches_call_ex
             updated_dispatches = ExtendableInterfaces.update_interface_dispatches(
                 dispatches, ($(interface_args_interface_objs...), )
             )
-            $interface_dispatches_def_ex = updated_dispatches
+            $interface_args_dispatches_def_ex = updated_dispatches
+        end
+
+        let
+            signatures = $interface_signatures_call_ex
+            updated_signatures = (signatures..., ($(interface_args_interface_objs...), ))
+            $interface_signatures_def_ex = updated_signatures
         end
 
         # Function definitions return the generic function:
