@@ -29,11 +29,11 @@ is_signature_defined(f, signature) = (signature in signatures(f))
 
 
 # We have to make this a vararg here instead of taking a tuple of types, because
-# the tuple `(Int, InterfaceArg(), String, InterfaceArg())` and
-# the tuple `(Float64, InterfaceArg(), Char, InterfaceArg())` have the same type,
+# the tuple `(Int, InterfaceArg, String, InterfaceArg)` and
+# the tuple `(Float64, InterfaceArg, Char, InterfaceArg)` have the same type,
 # namely `(DataType, DataType, DataType, DataType)`, so we wouldn't be able
 # to distinguish between those two signatures.
-interface_dispatches(f, arg_types...) = ()
+interface_args_dispatches(f, arg_types...) = ()
 
 
 struct InterfaceArg end
@@ -137,7 +137,7 @@ macro idispatch(fdef)
         end
     end
 
-    interface_dispatches_call_ex = :(ExtendableInterfaces.interface_dispatches($fname))
+    interface_dispatches_call_ex = :(ExtendableInterfaces.interface_args_dispatches($fname))
 
     for el in symbolic_signature
         if el == :(ExtendableInterfaces.InterfaceArg)
@@ -147,7 +147,7 @@ macro idispatch(fdef)
         end
     end
 
-    interface_dispatches_def_ex = :(ExtendableInterfaces.interface_dispatches(::typeof($fname)))
+    interface_dispatches_def_ex = :(ExtendableInterfaces.interface_args_dispatches(::typeof($fname)))
 
     for el in symbolic_signature
         push!(interface_dispatches_def_ex.args, :(::Type{$el}))
@@ -239,6 +239,6 @@ end
 _most_specific(::Tuple, ::Tuple{}) = SpecificityAmbiguity()
 
 
-function dispatch(f, x)
+function dispatch(f, signature, args)
     most_specific(tuple_intersect(imethods(f), implements(x)))
 end
