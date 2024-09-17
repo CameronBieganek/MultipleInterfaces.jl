@@ -40,10 +40,10 @@ end
     @test signatures(foo) == [
         (Int, InterfaceArg, String, InterfaceArg)
     ]
-    idispatches = interface_args_dispatches(foo, Int, InterfaceArg, String, InterfaceArg)
+    idispatches = interface_args_dispatches(var"idispatch#foo(Int,_,String,_)")
     @test issetequal(idispatches[1], (A(), ))
     @test issetequal(idispatches[2], (B(), ))
-    @test interface_signatures(foo, Int, InterfaceArg, String, InterfaceArg) == ((A(), B()), )
+    @test interface_signatures(var"idispatch#foo(Int,_,String,_)") == ((A(), B()), )
 
 
     @idispatch foo(a::Int, b: A, c::String, d: C) = 42
@@ -52,11 +52,11 @@ end
     @test signatures(foo) == [
         (Int, InterfaceArg, String, InterfaceArg)
     ]
-    idispatches = interface_args_dispatches(foo, Int, InterfaceArg, String, InterfaceArg)
+    idispatches = interface_args_dispatches(var"idispatch#foo(Int,_,String,_)")
     @test issetequal(idispatches[1], (A(), ))
     @test issetequal(idispatches[2], (B(), C()))
     @test issetequal(
-        interface_signatures(foo, Int, InterfaceArg, String, InterfaceArg),
+        interface_signatures(var"idispatch#foo(Int,_,String,_)"),
         (
             (A(), B()),
             (A(), C())
@@ -70,11 +70,11 @@ end
     @test signatures(foo) == [
         (Int, InterfaceArg, String, InterfaceArg)
     ]
-    idispatches = interface_args_dispatches(foo, Int, InterfaceArg, String, InterfaceArg)
+    idispatches = interface_args_dispatches(var"idispatch#foo(Int,_,String,_)")
     @test issetequal(idispatches[1], (A(), F()))
     @test issetequal(idispatches[2], (B(), C(), H()))
     @test issetequal(
-        interface_signatures(foo, Int, InterfaceArg, String, InterfaceArg),
+        interface_signatures(var"idispatch#foo(Int,_,String,_)"),
         (
             (A(), B()),
             (A(), C()),
@@ -90,13 +90,13 @@ end
         (Int, InterfaceArg, String, InterfaceArg),
         (Int, InterfaceArg, Int, InterfaceArg)
     ])
-    idispatches1 = interface_args_dispatches(foo, Int, InterfaceArg, String, InterfaceArg)
+    idispatches1 = interface_args_dispatches(var"idispatch#foo(Int,_,String,_)")
     @test issetequal(idispatches1[1], (A(), F()))
     @test issetequal(idispatches1[2], (B(), C(), H()))
-    idispatches2 = interface_args_dispatches(foo, Int, InterfaceArg, Int, InterfaceArg)
+    idispatches2 = interface_args_dispatches(var"idispatch#foo(Int,_,Int,_)")
     @test issetequal(idispatches2[1], (B(), ))
     @test issetequal(idispatches2[2], (D(), ))
-    @test interface_signatures(foo, Int, InterfaceArg, Int, InterfaceArg) == ((B(), D()), )
+    @test interface_signatures(var"idispatch#foo(Int,_,Int,_)") == ((B(), D()), )
 
 
     @idispatch foo(a::Int, b: C, c::Int, d: F) = 42
@@ -106,14 +106,14 @@ end
         (Int, InterfaceArg, String, InterfaceArg),
         (Int, InterfaceArg, Int, InterfaceArg)
     ])
-    idispatches1 = interface_args_dispatches(foo, Int, InterfaceArg, String, InterfaceArg)
+    idispatches1 = interface_args_dispatches(var"idispatch#foo(Int,_,String,_)")
     @test issetequal(idispatches1[1], (A(), F()))
     @test issetequal(idispatches1[2], (B(), C(), H()))
-    idispatches2 = interface_args_dispatches(foo, Int, InterfaceArg, Int, InterfaceArg)
+    idispatches2 = interface_args_dispatches(var"idispatch#foo(Int,_,Int,_)")
     @test issetequal(idispatches2[1], (B(), C()))
     @test issetequal(idispatches2[2], (D(), F()))
     @test issetequal(
-        interface_signatures(foo, Int, InterfaceArg, Int, InterfaceArg),
+        interface_signatures(var"idispatch#foo(Int,_,Int,_)"),
         (
             (B(), D()),
             (C(), F())
@@ -129,20 +129,20 @@ end
         (Int, InterfaceArg, Int, InterfaceArg),
         (Int, InterfaceArg, Int)
     ])
-    idispatches1 = interface_args_dispatches(foo, Int, InterfaceArg, String, InterfaceArg)
+    idispatches1 = interface_args_dispatches(var"idispatch#foo(Int,_,String,_)")
     @test issetequal(idispatches1[1], (A(), F()))
     @test issetequal(idispatches1[2], (B(), C(), H()))
-    idispatches2 = interface_args_dispatches(foo, Int, InterfaceArg, Int, InterfaceArg)
+    idispatches2 = interface_args_dispatches(var"idispatch#foo(Int,_,Int,_)")
     @test issetequal(idispatches2[1], (B(), C()))
     @test issetequal(idispatches2[2], (D(), F()))
-    idispatches3 = interface_args_dispatches(foo, Int, InterfaceArg, Int)
+    idispatches3 = interface_args_dispatches(var"idispatch#foo(Int,_,Int)")
     @test issetequal(idispatches3[1], (D(), ))
-    @test interface_signatures(foo, Int, InterfaceArg, Int) == ((D(), ), )
+    @test interface_signatures(var"idispatch#foo(Int,_,Int)") == ((D(), ), )
 
 
     # Make sure the first two interface signatures haven't been accidentally modified.
     @test issetequal(
-        interface_signatures(foo, Int, InterfaceArg, String, InterfaceArg),
+        interface_signatures(var"idispatch#foo(Int,_,String,_)"),
         (
             (A(), B()),
             (A(), C()),
@@ -150,7 +150,7 @@ end
         )
     )
     @test issetequal(
-        interface_signatures(foo, Int, InterfaceArg, Int, InterfaceArg),
+        interface_signatures(var"idispatch#foo(Int,_,Int,_)"),
         (
             (B(), D()),
             (C(), F())

@@ -28,17 +28,11 @@ signatures(f) = Tuple[]
 is_signature_defined(f, signature) = (signature in signatures(f))
 
 
-# We have to make this a vararg here instead of taking a tuple of types, because
-# the tuple `(Int, InterfaceArg, String, InterfaceArg)` and
-# the tuple `(Float64, InterfaceArg, Char, InterfaceArg)` have the same type,
-# namely `(DataType, DataType, DataType, DataType)`, so we wouldn't be able
-# to distinguish between those two signatures.
-interface_args_dispatches(f, arg_types...) = ()
-
-# The above function returns a separate tuple for each argument. This function
-# returns a tuple of signature tuples, where each signature tuple indicates the
-# interfaces that are dispatched on for one i-dispatch method.
-interface_signatures(f, arg_types...) = ()
+# `interface_args_dispatches` returns a separate tuple for each argument, whereas
+# `interface_signatures` returns a tuple of signature tuples, where each signature
+# tuple indicates the interfaces that are dispatched on for one i-dispatch method.
+interface_args_dispatches(f) = ()
+interface_signatures(f) = ()
 
 
 struct InterfaceArg end
@@ -142,30 +136,6 @@ macro idispatch(fdef)
         end
     end
 
-    interface_args_dispatches_call_ex = :(
-        ExtendableInterfaces.interface_args_dispatches($fname, $(symbolic_signature...))
-    )
-
-    symbolic_signature_type_selectors = map(el -> :(::Type{$el}), symbolic_signature)
-
-    interface_args_dispatches_def_ex = :(
-        ExtendableInterfaces.interface_args_dispatches(
-            ::typeof($fname),
-            $(symbolic_signature_type_selectors...)
-        )
-    )
-
-    interface_signatures_call_ex = :(
-        ExtendableInterfaces.interface_signatures($fname, $(symbolic_signature...))
-    )
-
-    interface_signatures_def_ex = :(
-        ExtendableInterfaces.interface_signatures(
-            ::typeof($fname),
-            $(symbolic_signature_type_selectors...)
-        )
-    )
-
     ex = quote
         if (
             !(@isdefined $fname) ||
@@ -189,17 +159,17 @@ macro idispatch(fdef)
         $_fname(::Tuple{$(interface_args_interface_types...)}, $(argnames...)) = $(body.args...)
 
         let
-            dispatches = $interface_args_dispatches_call_ex
+            dispatches = ExtendableInterfaces.interface_args_dispatches($_fname)
             updated_dispatches = ExtendableInterfaces.update_interface_dispatches(
                 dispatches, ($(interface_args_interface_objs...), )
             )
-            $interface_args_dispatches_def_ex = updated_dispatches
+            ExtendableInterfaces.interface_args_dispatches(::typeof($_fname)) = updated_dispatches
         end
 
         let
-            signatures = $interface_signatures_call_ex
+            signatures = ExtendableInterfaces.interface_signatures($_fname)
             updated_signatures = (signatures..., ($(interface_args_interface_objs...), ))
-            $interface_signatures_def_ex = updated_signatures
+            ExtendableInterfaces.interface_signatures(::typeof($_fname)) = updated_signatures
         end
 
         # Function definitions return the generic function:
