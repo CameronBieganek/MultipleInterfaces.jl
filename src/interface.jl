@@ -64,6 +64,13 @@ function throw_at_least_one_method_error()
 end
 
 
+# TODO:
+# - Add an `Intersection` type and overload `+(a::Interface, b::Interface)` so that
+#   it is equivalent to `Intersection{a, b}`.
+# - Require any interface that extends other interfaces to include at least one required method.
+#     - The first bullet point makes it easy to add an alias for an intersection type.
+
+
 # We could just leave this undefined and thus get a method error, but macro
 # method errors are usually not very informative.
 macro interface(name::Symbol)

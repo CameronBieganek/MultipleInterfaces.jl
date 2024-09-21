@@ -83,3 +83,13 @@ function ancestors(interface::Interface)
 
     visited
 end
+
+
+tmap(f, ::Tuple{}, ::Tuple{}) = ()
+
+function tmap(f, t::Tuple, s::Tuple)
+    (
+        f(t[1], s[1]),
+        tmap(f, tail(t), tail(s))...
+    )
+end

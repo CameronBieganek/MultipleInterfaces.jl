@@ -1,6 +1,7 @@
 
 
 struct SpecificityAmbiguity end
+struct InterfaceDispatchAmbiguity end
 
 
 struct InterfaceDispatchError{F, O} <: Exception
@@ -143,7 +144,7 @@ macro idispatch(fdef)
         )
             function $fname($(normalized_signature...))
                 $_fname(
-                    ExtendableInterfaces.dispatch($fname, $(interface_argnames...)),
+                    ExtendableInterfaces.dispatch($_fname, ($(interface_argnames...), )),
                     $(argnames...)
                 )
             end
@@ -215,6 +216,7 @@ end
 most_specific(xs::Tuple{Any}) = xs[1]
 most_specific(xs::Tuple) = _most_specific((), xs)
 
+# TODO: Can I simplify this recursion too?
 Base.@assume_effects :foldable function _most_specific(left::Tuple, right::Tuple)
     x = right[1]
     rest = tail(right)
@@ -228,6 +230,24 @@ end
 _most_specific(::Tuple, ::Tuple{}) = SpecificityAmbiguity()
 
 
-function dispatch(f, signature, args)
-    most_specific(tuple_intersect(imethods(f), implements(x)))
+# TODO: Properly handle the case when there is no matching method. Currently
+# this returns the InterfaceDispatchAmbiguity in that case, which is incorrect.
+# Basically in the last sub-block of the if-else block we need to check if there
+# are any matching methods. If there are, than it's an ambiguity. If there are not,
+# then it's a NoMatchingInterfaceDispatchMethod. ...Or maybe there's a more
+# clever way to do it.
+
+
+function dispatch(f, interface_args)
+    args_most_specific = tmap(interface_args_dispatches(f), interface_args) do dispatches, arg
+        most_specific(tuple_intersect(dispatches, implements(arg)))
+    end
+
+    if in_tuple(SpecificityAmbiguity(), args_most_specific)
+        SpecificityAmbiguity()
+    elseif in_tuple(args_most_specific, interface_signatures(f))
+        args_most_specific
+    else
+        InterfaceDispatchAmbiguity()
+    end
 end
