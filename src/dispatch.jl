@@ -62,6 +62,7 @@ macro idispatch(fdef)
     body = fdef.args[2]
     body.head == :block || error("Syntax error.") # TODO: Is this reachable?
     fname = signature_ex.args[1]
+    efname = esc(fname)
     signature_args = signature_ex.args[2:end]
 
     signature_vec = map(signature_args) do ex
@@ -80,7 +81,7 @@ macro idispatch(fdef)
 
     signature_str = "(" * join(signature_vec, ",") * ")"
 
-    _fname = Symbol("idispatch#$fname$signature_str")
+    _fname = esc(Symbol("idispatch#$fname$signature_str"))
 
     # TODO: There seems to be a lot of duplication of code here. See if I can simplify.
     # I should probably just use a single for loop to build up most of the vectors.
@@ -92,7 +93,7 @@ macro idispatch(fdef)
             ex.args[2]
         elseif ex.head == :call
             if ex.args[1] == :(:) && ex.args[2] isa Symbol && ex.args[3] isa Symbol
-                :(ExtendableInterfaces.InterfaceArg)
+                :InterfaceArg
             else
                 error("Syntax error.")
             end
@@ -120,8 +121,8 @@ macro idispatch(fdef)
     end
 
     interface_argnames = map(ex -> ex.args[2], interface_args)
-    interface_args_interface_types = map(ex -> ex.args[3], interface_args)
-    interface_args_interface_objs = map(ex -> :($(ex.args[3])()), interface_args)
+    interface_args_interface_types = map(ex -> esc(ex.args[3]), interface_args)
+    interface_args_interface_objs = map(ex -> :($(esc(ex.args[3]))()), interface_args)
 
     argnames = map(signature_args) do ex
         if ex isa Symbol
@@ -137,48 +138,46 @@ macro idispatch(fdef)
         end
     end
 
-    ex = quote
+    quote
         if (
-            !(@isdefined $fname) ||
-            !ExtendableInterfaces.is_signature_defined($fname, ($(symbolic_signature...), ))
+            !isdefined(@__MODULE__, $(QuoteNode(fname))) ||
+            !is_signature_defined($efname, ($(symbolic_signature...), ))
         )
-            function $fname($(normalized_signature...))
-                $_fname(
-                    ExtendableInterfaces.dispatch($_fname, ($(interface_argnames...), )),
-                    $(argnames...)
-                )
+            function $efname($(normalized_signature...))
+                dispatch_to = dispatch($_fname, ($(interface_argnames...), ))
+                $_fname(dispatch_to, $(argnames...))
             end
-            function $_fname(::ExtendableInterfaces.SpecificityAmbiguity, $(argnames...))
-                throw(ExtendableInterfaces.InterfaceDispatchError($fname, nothing))
+
+            function $_fname(::SpecificityAmbiguity, $(argnames...))
+                throw(InterfaceDispatchError($efname, nothing))
             end
+
             let
-                signatures = ExtendableInterfaces.signatures($fname)
-                push!(signatures, ($(symbolic_signature...), ))
-                ExtendableInterfaces.signatures(::typeof($fname)) = signatures
+                signatures_ = ExtendableInterfaces.signatures($efname)
+                push!(signatures_, ($(symbolic_signature...), ))
+                ExtendableInterfaces.signatures(::typeof($efname)) = signatures_
             end
         end
         $_fname(::Tuple{$(interface_args_interface_types...)}, $(argnames...)) = $(body.args...)
 
         let
             dispatches = ExtendableInterfaces.interface_args_dispatches($_fname)
-            updated_dispatches = ExtendableInterfaces.update_interface_dispatches(
-                dispatches, ($(interface_args_interface_objs...), )
+            updated_dispatches = update_interface_dispatches(
+                dispatches,
+                ($(interface_args_interface_objs...), )
             )
             ExtendableInterfaces.interface_args_dispatches(::typeof($_fname)) = updated_dispatches
         end
 
         let
-            signatures = ExtendableInterfaces.interface_signatures($_fname)
-            updated_signatures = (signatures..., ($(interface_args_interface_objs...), ))
+            signatures_ = ExtendableInterfaces.interface_signatures($_fname)
+            updated_signatures = (signatures_..., ($(interface_args_interface_objs...), ))
             ExtendableInterfaces.interface_signatures(::typeof($_fname)) = updated_signatures
         end
 
         # Function definitions return the generic function:
-        $fname
+        $efname
     end
-
-    # TODO: Use `esc` more surgically.
-    esc(ex)
 end
 
 
