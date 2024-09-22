@@ -182,7 +182,7 @@ end
 
 
 
-module DispatchTests
+module SingleDispatchTests
 
 using Test
 using ExtendableInterfaces
@@ -383,6 +383,58 @@ struct Frog end
     @test bbb(Frog()) == 3
     @test_throws InterfaceDispatchError aaa(Turtle())
 
+end
+
+end
+
+
+
+module MultipleDispatchTests
+
+using Test
+using ExtendableInterfaces
+
+function a end
+function b end
+function c end
+function d end
+function e end
+function f end
+function g end
+function h end
+
+@interface A begin a end
+@interface B extends A begin b end
+@interface C extends B begin c end
+@interface D extends C begin d end
+@interface E begin e end
+@interface F extends E begin f end
+@interface G extends F begin g end
+@interface H extends G begin h end
+
+@idispatch foo(::Int, b: B, f: F) = 1
+@idispatch foo(::Int, d: D, h: H) = 2
+@idispatch foo(::String, b: B, f: F) = 3
+@idispatch foo(::String, d: D, h: H) = 4
+
+struct Cat end
+struct Dog end
+struct Frog end
+struct Lizard end
+
+@type Cat implements C
+@type Dog implements D
+@type Frog implements G
+@type Lizard implements H
+
+@testset "multiple argument dispatch: foo" begin
+    @test foo(1, Cat(), Frog()) == 1
+    @test foo(1, Dog(), Lizard()) == 2
+    @test foo("a", Cat(), Frog()) == 3
+    @test foo("a", Dog(), Lizard()) == 4
+
+    @test_broken foo(1, Cat(), Lizard()) == 1
+    @test_broken foo(1, Dog(), Frog()) == 1
 end
 
 end

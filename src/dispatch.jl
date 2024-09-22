@@ -69,7 +69,7 @@ macro idispatch(fdef)
         if ex isa Symbol
             :Any
         elseif ex.head == :(::)
-            ex.args[2]
+            ex.args[end]
         elseif ex.head == :call
             if ex.args[1] == :(:) && ex.args[2] isa Symbol && ex.args[3] isa Symbol
                 :_
@@ -90,7 +90,7 @@ macro idispatch(fdef)
         if ex isa Symbol
             :Any
         elseif ex.head == :(::)
-            ex.args[2]
+            ex.args[end]
         elseif ex.head == :call
             if ex.args[1] == :(:) && ex.args[2] isa Symbol && ex.args[3] isa Symbol
                 :InterfaceArg
@@ -236,6 +236,8 @@ _most_specific(::Tuple, ::Tuple{}) = SingleArgumentAmbiguity()
 # then it's a NoMatchingInterfaceDispatchMethod. ...Or maybe there's a more
 # clever way to do it.
 
+# TODO: This is buggy. I think we need to first find all matching methods, and then find
+# the most specific of the matching methods.
 
 function dispatch(f, interface_args)
     args_most_specific = tmap(interface_args_dispatches(f), interface_args) do dispatches, arg
