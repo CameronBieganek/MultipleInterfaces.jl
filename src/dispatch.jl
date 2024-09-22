@@ -1,7 +1,7 @@
 
 
-struct SpecificityAmbiguity end
-struct InterfaceDispatchAmbiguity end
+struct SingleArgumentAmbiguity end
+struct MultipleArgumentAmbiguity end
 
 
 struct InterfaceDispatchError{F, O} <: Exception
@@ -148,7 +148,7 @@ macro idispatch(fdef)
                 $_fname(dispatch_to, $(argnames...))
             end
 
-            function $_fname(::SpecificityAmbiguity, $(argnames...))
+            function $_fname(::SingleArgumentAmbiguity, $(argnames...))
                 throw(InterfaceDispatchError($efname, nothing))
             end
 
@@ -226,11 +226,11 @@ Base.@assume_effects :foldable function _most_specific(left::Tuple, right::Tuple
     end
 end
 
-_most_specific(::Tuple, ::Tuple{}) = SpecificityAmbiguity()
+_most_specific(::Tuple, ::Tuple{}) = SingleArgumentAmbiguity()
 
 
 # TODO: Properly handle the case when there is no matching method. Currently
-# this returns the InterfaceDispatchAmbiguity in that case, which is incorrect.
+# this returns the MultipleArgumentAmbiguity in that case, which is incorrect.
 # Basically in the last sub-block of the if-else block we need to check if there
 # are any matching methods. If there are, than it's an ambiguity. If there are not,
 # then it's a NoMatchingInterfaceDispatchMethod. ...Or maybe there's a more
@@ -242,11 +242,11 @@ function dispatch(f, interface_args)
         most_specific(tuple_intersect(dispatches, implements(arg)))
     end
 
-    if in_tuple(SpecificityAmbiguity(), args_most_specific)
-        SpecificityAmbiguity()
+    if in_tuple(SingleArgumentAmbiguity(), args_most_specific)
+        SingleArgumentAmbiguity()
     elseif in_tuple(args_most_specific, interface_signatures(f))
         args_most_specific
     else
-        InterfaceDispatchAmbiguity()
+        MultipleArgumentAmbiguity()
     end
 end

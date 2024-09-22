@@ -187,7 +187,7 @@ module DispatchTests
 using Test
 using ExtendableInterfaces
 using ExtendableInterfaces: tail, in_tuple, delete, is_subinterface_all
-using ExtendableInterfaces: most_specific, SpecificityAmbiguity, dispatch
+using ExtendableInterfaces: most_specific, SingleArgumentAmbiguity, dispatch
 
 
 function a end
@@ -237,9 +237,9 @@ end
     @test most_specific((B(), A(), E(), F())) == F()
     @test most_specific((B(), F(), A(), E())) == F()
     @test most_specific((A(), C(), B())) == C()
-    @test most_specific((C(), B(), D())) == SpecificityAmbiguity()
-    @test most_specific((A(), H())) == SpecificityAmbiguity()
-    @test most_specific((A(), C(), H())) == SpecificityAmbiguity()
+    @test most_specific((C(), B(), D())) == SingleArgumentAmbiguity()
+    @test most_specific((A(), H())) == SingleArgumentAmbiguity()
+    @test most_specific((A(), C(), H())) == SingleArgumentAmbiguity()
 end
 
 
