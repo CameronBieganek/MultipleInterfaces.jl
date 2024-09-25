@@ -1,35 +1,35 @@
 
 
 # This function assumes that `s` and `t` do not contain any duplicates.
-tuple_intersect(s::Tuple, t::Tuple) = _tuple_intersect((), s, t)
+tintersect(s::Tuple, t::Tuple) = _tintersect((), s, t)
 
-Base.@assume_effects :foldable function _tuple_intersect(out::Tuple, s::Tuple, t::Tuple)
+Base.@assume_effects :foldable function _tintersect(out::Tuple, s::Tuple, t::Tuple)
     s1 = s[1]
     s_tail = tail(s)
     if in_tuple(s1, t)
-        _tuple_intersect((out..., s1), s_tail, t)
+        _tintersect((out..., s1), s_tail, t)
     else
-        _tuple_intersect(out, s_tail, t)
+        _tintersect(out, s_tail, t)
     end
 end
 
-_tuple_intersect(out::Tuple, ::Tuple{}, ::Tuple) = out
+_tintersect(out::Tuple, ::Tuple{}, ::Tuple) = out
 
 
 # This function assumes that `s` and `t` do not contain any duplicates.
-tuple_union(s::Tuple, t::Tuple) = _tuple_union(s, s, t)
+tunion(s::Tuple, t::Tuple) = _tunion(s, s, t)
 
-Base.@assume_effects :foldable function _tuple_union(out::Tuple, s::Tuple, t::Tuple)
+Base.@assume_effects :foldable function _tunion(out::Tuple, s::Tuple, t::Tuple)
     t1 = t[1]
     t_tail = tail(t)
     if in_tuple(t1, s)
-        _tuple_union(out, s, t_tail)
+        _tunion(out, s, t_tail)
     else
-        _tuple_union((out..., t1), s, t_tail)
+        _tunion((out..., t1), s, t_tail)
     end
 end
 
-_tuple_union(out::Tuple, ::Tuple, ::Tuple{}) = out
+_tunion(out::Tuple, ::Tuple, ::Tuple{}) = out
 
 
 tail(::Tuple{Any}) = ()

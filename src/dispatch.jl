@@ -241,7 +241,7 @@ _most_specific(::Tuple, ::Tuple{}) = SingleArgumentAmbiguity()
 
 function dispatch(f, interface_args)
     args_most_specific = tmap(interface_args_dispatches(f), interface_args) do dispatches, arg
-        most_specific(tuple_intersect(dispatches, implements(arg)))
+        most_specific(tintersect(dispatches, implements(arg)))
     end
 
     if in_tuple(SingleArgumentAmbiguity(), args_most_specific)
