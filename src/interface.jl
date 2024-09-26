@@ -129,7 +129,7 @@ end
 
 function update_implemented(::Type{T}, new_impls::Tuple) where {T}
     foldl(new_impls; init=implements(T)) do implemented, new_impl
-        tunion(implemented, ancestors(new_impl))
+        union_t(implemented, ancestors(new_impl))
     end
 end
 

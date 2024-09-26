@@ -1,35 +1,35 @@
 
 
 # This function assumes that `s` and `t` do not contain any duplicates.
-tintersect(s::Tuple, t::Tuple) = _tintersect((), s, t)
+intersect_t(s::Tuple, t::Tuple) = _intersect_t((), s, t)
 
-Base.@assume_effects :foldable function _tintersect(out::Tuple, s::Tuple, t::Tuple)
+Base.@assume_effects :foldable function _intersect_t(out::Tuple, s::Tuple, t::Tuple)
     s1 = s[1]
     s_tail = tail(s)
-    if in_tuple(s1, t)
-        _tintersect((out..., s1), s_tail, t)
+    if in_t(s1, t)
+        _intersect_t((out..., s1), s_tail, t)
     else
-        _tintersect(out, s_tail, t)
+        _intersect_t(out, s_tail, t)
     end
 end
 
-_tintersect(out::Tuple, ::Tuple{}, ::Tuple) = out
+_intersect_t(out::Tuple, ::Tuple{}, ::Tuple) = out
 
 
 # This function assumes that `s` and `t` do not contain any duplicates.
-tunion(s::Tuple, t::Tuple) = _tunion(s, s, t)
+union_t(s::Tuple, t::Tuple) = _union_t(s, s, t)
 
-Base.@assume_effects :foldable function _tunion(out::Tuple, s::Tuple, t::Tuple)
+Base.@assume_effects :foldable function _union_t(out::Tuple, s::Tuple, t::Tuple)
     t1 = t[1]
     t_tail = tail(t)
-    if in_tuple(t1, s)
-        _tunion(out, s, t_tail)
+    if in_t(t1, s)
+        _union_t(out, s, t_tail)
     else
-        _tunion((out..., t1), s, t_tail)
+        _union_t((out..., t1), s, t_tail)
     end
 end
 
-_tunion(out::Tuple, ::Tuple, ::Tuple{}) = out
+_union_t(out::Tuple, ::Tuple, ::Tuple{}) = out
 
 
 tail(::Tuple{Any}) = ()
@@ -45,9 +45,9 @@ function tail(x::Tuple{Any, Vararg{Any, N}}) where {N}
 end
 
 
-in_tuple(x::S, t::Tuple{T, Vararg}) where {S, T} = in_tuple(x, tail(t))
-in_tuple(::T, t::Tuple{T, Vararg}) where {T} = true
-in_tuple(_, t::Tuple{}) = false
+in_t(x::S, t::Tuple{T, Vararg}) where {S, T} = in_t(x, tail(t))
+in_t(::T, t::Tuple{T, Vararg}) where {T} = true
+in_t(_, t::Tuple{}) = false
 
 
 delete(t::Tuple, x) = _delete(x, (), t)
@@ -73,7 +73,7 @@ function ancestors(interface::Interface)
 
     while !isempty(stack)
         interface = pop!(stack)
-        if !in_tuple(interface, visited)
+        if !in_t(interface, visited)
             visited = (visited..., interface)
             for superinterface in superinterfaces(interface)
                 push!(stack, superinterface)
@@ -85,11 +85,11 @@ function ancestors(interface::Interface)
 end
 
 
-tmap(f, ::Tuple{}, ::Tuple{}) = ()
+map_t(f, ::Tuple{}, ::Tuple{}) = ()
 
-function tmap(f, t::Tuple, s::Tuple)
+function map_t(f, t::Tuple, s::Tuple)
     (
         f(t[1], s[1]),
-        tmap(f, tail(t), tail(s))...
+        map_t(f, tail(t), tail(s))...
     )
 end

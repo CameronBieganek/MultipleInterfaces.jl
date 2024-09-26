@@ -186,7 +186,7 @@ module SingleDispatchTests
 
 using Test
 using ExtendableInterfaces
-using ExtendableInterfaces: tail, in_tuple, delete, is_subinterface_all
+using ExtendableInterfaces: tail, in_t, delete, is_subinterface_all
 using ExtendableInterfaces: most_specific, SingleArgumentAmbiguity, dispatch
 
 
@@ -219,10 +219,10 @@ end
     @test tail((A(), B(), C())) == (B(), C())
     @test tail((D(), )) === ()
 
-    @test in_tuple(C(), (A(), B(), C()))
-    @test !in_tuple(C(), (A(), B()))
-    @test in_tuple(C(), (C(), ))
-    @test !in_tuple(D(), ())
+    @test in_t(C(), (A(), B(), C()))
+    @test !in_t(C(), (A(), B()))
+    @test in_t(C(), (C(), ))
+    @test !in_t(D(), ())
 
     @test delete((A(), B(), C()), B()) == (A(), C())
     @test delete((A(), B(), C()), D()) == (A(), B(), C())

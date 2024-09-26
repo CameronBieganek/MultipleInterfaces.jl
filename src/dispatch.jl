@@ -47,7 +47,7 @@ end
 
 function update_interface_dispatches(dispatches::Tuple, interface_args_interfaces::Tuple)
     map(dispatches, interface_args_interfaces) do arg_dispaches, interface
-        if in_tuple(interface, arg_dispaches)
+        if in_t(interface, arg_dispaches)
             arg_dispaches
         else
             (arg_dispaches..., interface)
@@ -182,7 +182,7 @@ end
 
 
 function visit_interface(interface, visited::Tuple, targets::Tuple)
-    if in_tuple(interface, visited)
+    if in_t(interface, visited)
         return visited, targets
     end
 
@@ -240,13 +240,13 @@ _most_specific(::Tuple, ::Tuple{}) = SingleArgumentAmbiguity()
 # the most specific of the matching methods.
 
 function dispatch(f, interface_args)
-    args_most_specific = tmap(interface_args_dispatches(f), interface_args) do dispatches, arg
-        most_specific(tintersect(dispatches, implements(arg)))
+    args_most_specific = map_t(interface_args_dispatches(f), interface_args) do dispatches, arg
+        most_specific(intersect_t(dispatches, implements(arg)))
     end
 
-    if in_tuple(SingleArgumentAmbiguity(), args_most_specific)
+    if in_t(SingleArgumentAmbiguity(), args_most_specific)
         SingleArgumentAmbiguity()
-    elseif in_tuple(args_most_specific, interface_signatures(f))
+    elseif in_t(args_most_specific, interface_signatures(f))
         args_most_specific
     else
         MultipleArgumentAmbiguity()
