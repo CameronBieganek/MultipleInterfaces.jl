@@ -64,6 +64,60 @@ end
 end
 
 
+
+module AncestorsTests
+
+using Test
+using ExtendableInterfaces
+using ExtendableInterfaces: ancestors
+
+function a end
+function b end
+function h end
+
+@interface A begin
+    a
+end
+
+@interface B begin
+    b
+end
+
+# Isolated node in interface DAG.
+@interface H begin
+    h
+end
+
+@interface C extends A, B
+@interface D extends B
+@interface E extends C, D
+@interface F extends E
+@interface G extends F
+
+@testset "ancestors" begin
+
+    @test ancestors(H()) == (H(), )
+    @test ancestors(A()) == (A(), )
+    @test ancestors(B()) == (B(), )
+    @test issetequal(
+        ancestors(F()),
+        (A(), B(), C(), D(), E(), F())
+    )
+    @test issetequal(
+        ancestors(C()),
+        (A(), B(), C())
+    )
+    @test issetequal(
+        ancestors(D()),
+        (B(), D())
+    )
+
+end
+
+end
+
+
+
 module TypeMacroTests
 
 using Test

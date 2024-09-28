@@ -186,8 +186,7 @@ module SingleDispatchTests
 
 using Test
 using ExtendableInterfaces
-using ExtendableInterfaces: tail, in_t, delete, is_subinterface_all
-using ExtendableInterfaces: most_specific, SingleArgumentAmbiguity, dispatch
+using ExtendableInterfaces: dispatch, is_subinterface_all, most_specific, SingleArgumentAmbiguity
 
 
 function a end
@@ -216,17 +215,6 @@ end
 
 @testset "dispatch helpers" begin
 
-    @test tail((A(), B(), C())) == (B(), C())
-    @test tail((D(), )) === ()
-
-    @test in_t(C(), (A(), B(), C()))
-    @test !in_t(C(), (A(), B()))
-    @test in_t(C(), (C(), ))
-    @test !in_t(D(), ())
-
-    @test delete((A(), B(), C()), B()) == (A(), C())
-    @test delete((A(), B(), C()), D()) == (A(), B(), C())
-
     @test is_subinterface_all(E(), (B(), A()))
     @test !is_subinterface_all(E(), (B(), A(), F()))
 
@@ -240,6 +228,7 @@ end
     @test most_specific((C(), B(), D())) == SingleArgumentAmbiguity()
     @test most_specific((A(), H())) == SingleArgumentAmbiguity()
     @test most_specific((A(), C(), H())) == SingleArgumentAmbiguity()
+
 end
 
 

@@ -1,35 +1,33 @@
 
 
 # This function assumes that `s` and `t` do not contain any duplicates.
-intersect_t(s::Tuple, t::Tuple) = _intersect_t((), s, t)
+intersect_t(::Tuple{}, t::Tuple) = ()
 
-Base.@assume_effects :foldable function _intersect_t(out::Tuple, s::Tuple, t::Tuple)
+function intersect_t(s::Tuple, t::Tuple)
     s1 = s[1]
     s_tail = tail(s)
+
     if in_t(s1, t)
-        _intersect_t((out..., s1), s_tail, t)
+        (s1, intersect_t(s_tail, t)...)
     else
-        _intersect_t(out, s_tail, t)
+        intersect_t(s_tail, t)
     end
 end
-
-_intersect_t(out::Tuple, ::Tuple{}, ::Tuple) = out
 
 
 # This function assumes that `s` and `t` do not contain any duplicates.
-union_t(s::Tuple, t::Tuple) = _union_t(s, s, t)
+union_t(::Tuple{}, t::Tuple) = t
 
-Base.@assume_effects :foldable function _union_t(out::Tuple, s::Tuple, t::Tuple)
-    t1 = t[1]
-    t_tail = tail(t)
-    if in_t(t1, s)
-        _union_t(out, s, t_tail)
+function union_t(s::Tuple, t::Tuple)
+    s1 = s[1]
+    s_tail = tail(s)
+
+    if in_t(s1, t)
+        union_t(s_tail, t)
     else
-        _union_t((out..., t1), s, t_tail)
+        (s1, union_t(s_tail, t)...)
     end
 end
-
-_union_t(out::Tuple, ::Tuple, ::Tuple{}) = out
 
 
 tail(::Tuple{Any}) = ()
@@ -50,38 +48,22 @@ in_t(::T, t::Tuple{T, Vararg}) where {T} = true
 in_t(_, t::Tuple{}) = false
 
 
-delete(t::Tuple, x) = _delete(x, (), t)
+# NOTE: This function assumes that the elements of the input tuple are unique.
+delete(::Tuple{}, x) = ()
+delete(t::Tuple{T, Vararg}, ::T) where {T} = tail(t)
 
-Base.@assume_effects :foldable function _delete(
-    x::S,
-    left::Tuple,
-    right::Tuple{T, Vararg}
-) where {S, T}
-    _delete(x, (left..., right[1]), tail(right))
+function delete(t::Tuple{S, Vararg}, x::T) where {S, T}
+    (t[1], delete(tail(t), x)...)
 end
 
-_delete(::T, left::Tuple, right::Tuple{T, Vararg}) where {T} = (left..., tail(right)...)
-_delete(_, left::Tuple, right::Tuple{}) = left
 
+map_t(f, ::Tuple{}) = ()
 
-# This function is not part of the dispatch machinery, so it does not need to compile away.
-# This function returns all (possibly transitive) superinterfaces of
-# `interface`, including `interface`.
-function ancestors(interface::Interface)
-    visited = ()
-    stack = Interface[interface]
-
-    while !isempty(stack)
-        interface = pop!(stack)
-        if !in_t(interface, visited)
-            visited = (visited..., interface)
-            for superinterface in superinterfaces(interface)
-                push!(stack, superinterface)
-            end
-        end
-    end
-
-    visited
+function map_t(f, t::Tuple)
+    (
+        f(t[1]),
+        map_t(f, tail(t))...
+    )
 end
 
 
@@ -92,4 +74,33 @@ function map_t(f, t::Tuple, s::Tuple)
         f(t[1], s[1]),
         map_t(f, tail(t), tail(s))...
     )
+end
+
+
+filter_t(f, ::Tuple{}) = ()
+
+function filter_t(f, t::Tuple)
+    if f(t[1])
+        (t[1], filter_t(f, tail(t))...)
+    else
+        filter_t(f, tail(t))
+    end
+end
+
+
+all_t(f, ::Tuple{}) = true
+all_t(f, t::Tuple) = f(t[1]) ? all_t(f, tail(t)) : false
+
+
+unique_t(::Tuple{}) = ()
+
+function unique_t(t::Tuple)
+    first = t[1]
+    rest = tail(t)
+
+    if in_t(first, rest)
+        unique_t(rest)
+    else
+        (first, unique_t(rest)...)
+    end
 end

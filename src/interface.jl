@@ -127,6 +127,27 @@ function throw_type_macro_syntax_error()
 end
 
 
+# This function is not part of the dispatch machinery, so it does not need to compile away.
+# This function returns all (possibly transitive) superinterfaces of
+# `interface`, including `interface`.
+function ancestors(interface::Interface)
+    visited = ()
+    stack = Interface[interface]
+
+    while !isempty(stack)
+        interface = pop!(stack)
+        if !in_t(interface, visited)
+            visited = (visited..., interface)
+            for superinterface in superinterfaces(interface)
+                push!(stack, superinterface)
+            end
+        end
+    end
+
+    visited
+end
+
+
 function update_implemented(::Type{T}, new_impls::Tuple) where {T}
     foldl(new_impls; init=implements(T)) do implemented, new_impl
         union_t(implemented, ancestors(new_impl))
