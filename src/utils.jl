@@ -88,8 +88,16 @@ function filter_t(f, t::Tuple)
 end
 
 
-all_t(f, ::Tuple{}) = true
-all_t(f, t::Tuple) = f(t[1]) ? all_t(f, tail(t)) : false
+# `f` is a binary function.
+all_t(f, ::Tuple{}, ::Tuple{}) = true
+
+function all_t(f, s::Tuple, t::Tuple)
+    if f(s[1], t[1])
+        all_t(f, tail(s), tail(t))
+    else
+        false
+    end
+end
 
 
 unique_t(::Tuple{}) = ()

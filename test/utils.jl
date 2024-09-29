@@ -38,9 +38,14 @@ end
 
 @testset "utils" begin
 
-    @test all_t(==(A()), ())
-    @test all_t(==(A()), (A(), A()))
-    @test !all_t(==(A()), (A(), B()))
+    @test all_t(==, (), ())
+    @test all_t(!=, (), ())
+    @test all_t(==, (A(), ), (A(), ))
+    @test !all_t(==, (A(), ), (B(), ))
+    @test all_t(==, (A(), B()), (A(), B()))
+    @test !all_t(==, (A(), B()), (A(), C()))
+    @test all_t(==, (A(), B(), C()), (A(), B(), C()))
+    @test !all_t(==, (A(), B(), C()), (A(), B(), D()))
 
     @test delete((), B()) == ()
     @test delete((A(), B(), C()), B()) == (A(), C())
