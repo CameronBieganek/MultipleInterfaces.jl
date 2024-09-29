@@ -1,5 +1,12 @@
 
 
+# Most of the functions in this file have analogs in Base Julia, but
+# they typically have recursion or unrolling limits, which we cannot
+# have in this package. Also, we need to be in full control of the
+# implementations so that we can use `Base.@assume_effects :foldable`
+# with reasonable confidence.
+
+
 # This function assumes that `s` and `t` do not contain any duplicates.
 intersect_t(::Tuple{}, t::Tuple) = ()
 
@@ -110,5 +117,23 @@ function unique_t(t::Tuple)
         unique_t(rest)
     else
         (first, unique_t(rest)...)
+    end
+end
+
+
+foldl_t(f, acc, ::Tuple{}) = acc
+foldl_t(f, acc, t::Tuple) = foldl_t(f, f(acc, t[1]), tail(t))
+
+
+# Just for completeness. I don't think we actually need this anywhere.
+transpose_t(::Tuple{}) = ()
+
+# Take an m-tuple of n-tuples and turn it into an n-tuple of m-tuples.
+function transpose_t(ts::Tuple)
+    init = map_t(_ -> (), ts[1])
+    foldl_t(init, ts) do acc, t
+        map_t(acc, t) do acc_arg, t_arg
+            (acc_arg..., t_arg)
+        end
     end
 end

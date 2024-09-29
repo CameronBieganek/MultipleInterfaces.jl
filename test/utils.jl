@@ -4,8 +4,8 @@ module UtilsTests
 
 using Test
 using ExtendableInterfaces
-using ExtendableInterfaces: all_t, ancestors, delete, filter_t, in_t
-using ExtendableInterfaces: intersect_t, map_t, tail, union_t, unique_t
+using ExtendableInterfaces: all_t, ancestors, delete, filter_t, foldl_t, in_t
+using ExtendableInterfaces: intersect_t, map_t, tail, transpose_t, union_t, unique_t
 
 
 function a end
@@ -55,6 +55,12 @@ end
     @test filter_t(==(A()), (B(), A(), A(), C())) == (A(), A())
     @test filter_t(!=(A()), (B(), A(), A(), C())) == (B(), C())
 
+    @test foldl_t(+, 100, ()) == 100
+    @test foldl_t(+, 0, (1, 2, 3, 4)) == 10
+    @test foldl_t((x, y) -> (x, y), (), ()) == ()
+    @test foldl_t((x, y) -> (x, y), (), (A(), B(), C())) == ((((), A()), B()), C())
+    @test foldl_t((x, y) -> x => y, (), (A(), B(), C())) == (((() => A()) => B()) => C())
+
     @test in_t(C(), (A(), B(), C()))
     @test !in_t(C(), (A(), B()))
     @test in_t(C(), (C(), ))
@@ -92,6 +98,44 @@ end
 
     @test tail((A(), B(), C())) == (B(), C())
     @test tail((D(), )) === ()
+
+    @test transpose_t(()) == ()
+    @test ==(
+        transpose_t(
+            ((1, 2), )
+        ),
+        ((1, ), (2, ))
+    )
+    @test ==(
+        transpose_t(
+            ((1, ), (2, ), (3, ))
+        ),
+        ((1, 2, 3), )
+    )
+    @test ==(
+        transpose_t(
+            ((1, 2), (3, 4), (5, 6))
+        ),
+        ((1, 3, 5), (2, 4, 6))
+    )
+    @test ==(
+        transpose_t(
+            ((A(), B()), )
+        ),
+        ((A(), ), (B(), ))
+    )
+    @test ==(
+        transpose_t(
+            ((A(), ), (B(), ), (C(), ))
+        ),
+        ((A(), B(), C()), )
+    )
+    @test ==(
+        transpose_t(
+            ((A(), B()), (C(), D()), (E(), F()))
+        ),
+        ((A(), C(), E()), (B(), D(), F()))
+    )
 
     @test issetequal(
         union_t(
