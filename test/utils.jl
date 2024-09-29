@@ -57,9 +57,9 @@ end
 
     @test foldl_t(+, 100, ()) == 100
     @test foldl_t(+, 0, (1, 2, 3, 4)) == 10
-    @test foldl_t((x, y) -> (x, y), (), ()) == ()
-    @test foldl_t((x, y) -> (x, y), (), (A(), B(), C())) == ((((), A()), B()), C())
-    @test foldl_t((x, y) -> x => y, (), (A(), B(), C())) == (((() => A()) => B()) => C())
+    @test foldl_t(tuple, (), ()) == ()
+    @test foldl_t(tuple, (), (A(), B(), C())) == ((((), A()), B()), C())
+    @test foldl_t(=>, (), (A(), B(), C())) == (((() => A()) => B()) => C())
 
     @test in_t(C(), (A(), B(), C()))
     @test !in_t(C(), (A(), B()))
