@@ -308,19 +308,19 @@ struct Eagle end
 
     # ---- bar ----
     @test bar(Bear()) == 4
-    @test_throws InterfaceDispatchError bar(Fish())
+    @test_throws SingleArgumentAmbiguityError bar(Fish())
 
     # ---- asdf ----
     @test asdf(Squid()) == 2
     @test asdf(Raven()) == 2
     @test asdf(Goat()) == 3
-    @test_throws InterfaceDispatchError asdf(Crow())
+    @test_throws SingleArgumentAmbiguityError asdf(Crow())
 
     # ---- qwer ----
     @test qwer(Lizard()) == 3
     @test qwer(Rabbit()) == 1
     @test qwer(Eagle()) == 2
-    @test_throws InterfaceDispatchError qwer(Toad())
+    @test_throws SingleArgumentAmbiguityError qwer(Toad())
 
 end
 
@@ -370,7 +370,7 @@ struct Frog end
 
     @test baz(Turtle()) == 1
     @test bbb(Frog()) == 3
-    @test_throws InterfaceDispatchError aaa(Turtle())
+    @test_throws SingleArgumentAmbiguityError aaa(Turtle())
 
 end
 
@@ -422,8 +422,8 @@ struct Lizard end
     @test foo("a", Cat(), Frog()) == 3
     @test foo("a", Dog(), Lizard()) == 4
 
-    @test_broken foo(1, Cat(), Lizard()) == 1
-    @test_broken foo(1, Dog(), Frog()) == 1
+    @test foo(1, Cat(), Lizard()) == 1
+    @test foo(1, Dog(), Frog()) == 1
 end
 
 end

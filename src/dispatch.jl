@@ -1,27 +1,27 @@
 
 
+struct NoMatchingIDispatchMethod end
 struct SingleArgumentAmbiguity end
 struct MultipleArgumentAmbiguity end
 
 
-struct InterfaceDispatchError{F, O} <: Exception
-    f::F
-    obj::O
+struct NoMatchingIDispatchMethodError <: Exception end
+struct SingleArgumentAmbiguityError <: Exception end
+struct MultipleArgumentAmbiguityError <: Exception end
+
+
+# TODO: Improve the error messages.
+
+function Base.showerror(io::IO, ::NoMatchingIDispatchMethodError)
+    print(io, "No matching i-dispatch method.")
 end
 
-# TODO: Update this mulltiple-interface dispatch.
-function Base.showerror(io::IO, e::InterfaceDispatchError)
-    msg = (
-        """
-        There is no unique most-specific interface among the intersection of \
-        the interfaces that `$(e.f)` dispatches on and the interfaces that \
-        the `$(typeof(e.obj))` type implements. This usually indicates that a \
-        more specific ad hoc polymorphic method should be implemented for `$(e.f)` \
-        either by the owner of `$(e.f)` or the owner(s) of the interfaces that \
-        `$(e.f)` dispatches on.
-        """
-    )
-    print(io, msg)
+function Base.showerror(io::IO, ::SingleArgumentAmbiguityError)
+    print(io, "There is a single argument dispatch ambiguity.")
+end
+
+function Base.showerror(io::IO, ::MultipleArgumentAmbiguityError)
+    print(io, "There is a multiple argument dispatch ambiguity.")
 end
 
 
@@ -149,7 +149,7 @@ macro idispatch(fdef)
             end
 
             function $_fname(::SingleArgumentAmbiguity, $(argnames...))
-                throw(InterfaceDispatchError($efname, nothing))
+                throw(SingleArgumentAmbiguityError())
             end
 
             let
@@ -209,13 +209,12 @@ function is_subinterface_all(interface, targets::Tuple)
     visit_superinterfaces(superinterfaces(interface), (), targets) === nothing
 end
 
-# TODO:
-# most_specific(xs::Tuple{}) = PolymorphicMethodError("No polymorphic method matching foo(x: A)")
 
 most_specific(xs::Tuple{Any}) = xs[1]
 most_specific(xs::Tuple) = _most_specific((), xs)
 
 # TODO: Can I simplify this recursion too?
+# Maybe use `any_t` (which I haven't written yet).
 Base.@assume_effects :foldable function _most_specific(left::Tuple, right::Tuple)
     x = right[1]
     rest = tail(right)
@@ -229,25 +228,24 @@ end
 _most_specific(::Tuple, ::Tuple{}) = SingleArgumentAmbiguity()
 
 
-# TODO: Properly handle the case when there is no matching method. Currently
-# this returns the MultipleArgumentAmbiguity in that case, which is incorrect.
-# Basically in the last sub-block of the if-else block we need to check if there
-# are any matching methods. If there are, than it's an ambiguity. If there are not,
-# then it's a NoMatchingInterfaceDispatchMethod. ...Or maybe there's a more
-# clever way to do it.
-
-# TODO: This is buggy. I think we need to first find all matching methods, and then find
-# the most specific of the matching methods.
-
 function dispatch(f, interface_args)
-    args_most_specific = map_t(interface_args_dispatches(f), interface_args) do dispatches, arg
-        most_specific(intersect_t(dispatches, implements(arg)))
+    argwise_implemented = map_t(implements, interface_args)
+
+    matching_signatures = filter_t(interface_signatures(f)) do signature
+        all_t(in_t, signature, argwise_implemented)
     end
 
-    if in_t(SingleArgumentAmbiguity(), args_most_specific)
+    matching_signatures === () && return NoMatchingIDispatchMethod()
+
+    argwise_most_specific = map_t(transpose_t(matching_signatures)) do dispatches
+        most_specific(unique_t(dispatches))
+    end
+
+    # TODO: Return more information for ambiguities so we can have more useful error messages.
+    if in_t(SingleArgumentAmbiguity(), argwise_most_specific)
         SingleArgumentAmbiguity()
-    elseif in_t(args_most_specific, interface_signatures(f))
-        args_most_specific
+    elseif in_t(argwise_most_specific, matching_signatures)
+        argwise_most_specific
     else
         MultipleArgumentAmbiguity()
     end
