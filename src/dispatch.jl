@@ -56,6 +56,7 @@ function update_interface_dispatches(dispatches::Tuple, interface_args_interface
 end
 
 
+# TODO: Fix handling of first argument in `foo(::Int, a: A)`.
 macro idispatch(fdef)
     # For now assume the single-line form of function definition.
     signature_ex = fdef.args[1]

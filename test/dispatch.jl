@@ -392,38 +392,57 @@ function f end
 function g end
 function h end
 
+# A -> B -> C -> D
 @interface A begin a end
 @interface B extends A begin b end
 @interface C extends B begin c end
 @interface D extends C begin d end
+
+# E -> F -> G -> H
 @interface E begin e end
 @interface F extends E begin f end
 @interface G extends F begin g end
 @interface H extends G begin h end
 
-@idispatch foo(::Int, b: B, f: F) = 1
-@idispatch foo(::Int, d: D, h: H) = 2
-@idispatch foo(::String, b: B, f: F) = 3
-@idispatch foo(::String, d: D, h: H) = 4
+@idispatch foo(x::Int, b: B, f: F) = 1
+@idispatch foo(x::Int, d: D, h: H) = 2
+@idispatch foo(x::String, b: B, f: F) = 3
+@idispatch foo(x::String, d: D, h: H) = 4
 
 struct Cat end
 struct Dog end
-struct Frog end
-struct Lizard end
+struct Gerbal end
+struct Hamster end
 
 @type Cat implements C
 @type Dog implements D
-@type Frog implements G
-@type Lizard implements H
+@type Gerbal implements G
+@type Hamster implements H
 
 @testset "multiple argument dispatch: foo" begin
-    @test foo(1, Cat(), Frog()) == 1
-    @test foo(1, Dog(), Lizard()) == 2
-    @test foo("a", Cat(), Frog()) == 3
-    @test foo("a", Dog(), Lizard()) == 4
+    @test foo(1, Cat(), Gerbal()) == 1
+    @test foo(1, Cat(), Hamster()) == 1
+    @test foo(1, Dog(), Gerbal()) == 1
+    @test foo(1, Dog(), Hamster()) == 2
+    @test foo("a", Cat(), Gerbal()) == 3
+    @test foo("a", Cat(), Hamster()) == 3
+    @test foo("a", Dog(), Gerbal()) == 3
+    @test foo("a", Dog(), Hamster()) == 4
 
-    @test foo(1, Cat(), Lizard()) == 1
-    @test foo(1, Dog(), Frog()) == 1
+    @test_throws NoMatchingIDispatchMethodError foo(1, Cat(), Cat())
+    @test_throws NoMatchingIDispatchMethodError foo(1, Cat(), Dog())
+    @test_throws NoMatchingIDispatchMethodError foo(1, Dog(), Cat())
+    @test_throws NoMatchingIDispatchMethodError foo(1, Dog(), Dog())
+
+    @test_throws NoMatchingIDispatchMethodError foo(1, Gerbal(), Cat())
+    @test_throws NoMatchingIDispatchMethodError foo(1, Gerbal(), Dog())
+    @test_throws NoMatchingIDispatchMethodError foo(1, Hamster(), Cat())
+    @test_throws NoMatchingIDispatchMethodError foo(1, Hamster(), Dog())
+
+    @test_throws NoMatchingIDispatchMethodError foo(1, Gerbal(), Gerbal())
+    @test_throws NoMatchingIDispatchMethodError foo(1, Gerbal(), Hamster())
+    @test_throws NoMatchingIDispatchMethodError foo(1, Hamster(), Gerbal())
+    @test_throws NoMatchingIDispatchMethodError foo(1, Hamster(), Hamster())
 end
 
 end
