@@ -148,8 +148,16 @@ macro idispatch(fdef)
                 $_fname(dispatch_to, $(argnames...))
             end
 
+            function $_fname(::NoMatchingIDispatchMethod, $(argnames...))
+                throw(NoMatchingIDispatchMethodError())
+            end
+
             function $_fname(::SingleArgumentAmbiguity, $(argnames...))
                 throw(SingleArgumentAmbiguityError())
+            end
+
+            function $_fname(::MultipleArgumentAmbiguity, $(argnames...))
+                throw(MultipleArgumentAmbiguityError())
             end
 
             let
