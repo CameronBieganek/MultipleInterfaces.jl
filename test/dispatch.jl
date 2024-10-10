@@ -409,13 +409,17 @@ function h end
 @idispatch foo(x::String, b: B, f: F) = 3
 @idispatch foo(x::String, d: D, h: H) = 4
 
+struct Ant end
 struct Cat end
 struct Dog end
+struct Elephant end
 struct Gerbal end
 struct Hamster end
 
+@type Ant implements A
 @type Cat implements C
 @type Dog implements D
+@type Elephant implements E
 @type Gerbal implements G
 @type Hamster implements H
 
@@ -443,6 +447,12 @@ struct Hamster end
     @test_throws NoMatchingIDispatchMethodError foo(1, Gerbal(), Hamster())
     @test_throws NoMatchingIDispatchMethodError foo(1, Hamster(), Gerbal())
     @test_throws NoMatchingIDispatchMethodError foo(1, Hamster(), Hamster())
+
+    @test_throws NoMatchingIDispatchMethodError foo(1, Ant(), Elephant())
+    @test_throws NoMatchingIDispatchMethodError foo(1, Ant(), Gerbal())
+    @test_throws NoMatchingIDispatchMethodError foo(1, Ant(), Hamster())
+    @test_throws NoMatchingIDispatchMethodError foo(1, Cat(), Elephant())
+    @test_throws NoMatchingIDispatchMethodError foo(1, Dog(), Elephant())
 end
 
 end
