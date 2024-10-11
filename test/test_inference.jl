@@ -4,7 +4,7 @@
 # circumstances but fail inside an `@testset`, so I've moved all the inference tests
 # to this top-level script.
 
-module TestInference
+module TestInferenceSingleArgumentDispatch
 
 using Test
 using ExtendableInterfaces
@@ -125,5 +125,47 @@ struct Eagle end
 @type Eagle implements B
 
 @inferred dispatch(qwer, (Eagle(), ))
+
+
+# -------- Transitive "implements" declarations. --------
+function j end
+function k end
+
+@interface J begin j end
+@interface K begin k end
+@interface L extends J, K
+
+@idispatch baz(x: J) = 1
+
+struct Turtle end
+@type Turtle implements L
+
+@idispatch aaa(x: J) = 1
+@idispatch aaa(x: K) = 2
+
+function m end
+function o end
+function r end
+
+@interface M begin m end
+@interface N extends M
+@interface O begin o end
+@interface P extends N, O
+@interface Q extends P
+@interface R begin r end
+@interface S extends R
+
+@idispatch bbb(x: M) = 1
+@idispatch bbb(x: O) = 2
+@idispatch bbb(x: P) = 3
+@idispatch bbb(x: R) = 4
+
+struct Frog end
+@type Frog implements N
+@type Frog implements Q
+
+@inferred dispatch(baz, (Turtle(), ))
+@inferred dispatch(bbb, (Frog(), ))
+@inferred dispatch(aaa, (Turtle(), ))
 
 end # module
