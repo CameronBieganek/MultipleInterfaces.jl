@@ -8,6 +8,6 @@ using Test
     include("dispatch.jl")
 end
 
-# println("\nTesting inference...")
-# include("test_inference.jl")
-# println("Inference successful.\n")
+println("\nTesting inference...")
+include("test_inference.jl")
+println("Inference successful.\n")
