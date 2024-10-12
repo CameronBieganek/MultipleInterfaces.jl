@@ -56,136 +56,128 @@ function update_interface_dispatches(dispatches::Tuple, interface_args_interface
 end
 
 
+sym_vec(n) = Vector{Symbol}(undef, n)
+throw_idispatch_syntax_error() = error("Syntax error in the `@idispatch` macro.")
+
+
 # TODO: Fix handling of first argument in `foo(::Int, a: A)`.
 macro idispatch(fdef)
     # For now assume the single-line form of function definition.
-    signature_ex = fdef.args[1]
+    call_ex = fdef.args[1]
     body = fdef.args[2]
     body.head == :block || error("Syntax error.") # TODO: Is this reachable?
-    fname = signature_ex.args[1]
-    efname = esc(fname)
-    signature_args = signature_ex.args[2:end]
+    f_name_sym = call_ex.args[1]
+    f_name = esc(f_name_sym)
+    signature_ex = call_ex.args[2:end]
+    n_args = length(signature_ex)
 
-    signature_vec = map(signature_args) do ex
-        if ex isa Symbol
-            :Any
-        elseif ex.head == :(::)
-            ex.args[end]
-        elseif ex.head == :call
-            if ex.args[1] == :(:) && ex.args[2] isa Symbol && ex.args[3] isa Symbol
-                :_
+    # Nomenclature
+    # ...given the input `foo(x::Int, a: A, y::String, b: B)`
+    #
+    # signature:                 [:Int, :InterfaceArg, :String, :InterfaceArg]
+    # underscore_signature:      [:Int, :_, :String, :_]
+    # underscore_signature_str:  "(Int,_,String,_)"
+    # normalized_signature_ex:   [:(x::Int), :a, :(y::String), :b]
+    # arg_names:                 [:x, :a, :y, :b]
+    # interface_signature:       [esc(:A), esc(:B)]
+    # interface_arg_names:       [:a, :b]
+    # interface_objects:         [:($(esc(:A)())), :($(esc(:B)()))]
+
+    signature = sym_vec(n_args)
+    underscore_signature = sym_vec(n_args)
+    arg_names = sym_vec(n_args)
+    normalized_signature_ex = Vector{Any}(undef, n_args)
+
+    interface_arg_names = Symbol[]
+    interface_signature = Expr[]   # Escaped symbols.
+    interface_objects   = Expr[]
+
+    for (i, arg_ex) in enumerate(signature_ex)
+        if arg_ex isa Symbol
+            name = normalized_arg = arg_ex
+            type = underscore_type = :Any
+        elseif arg_ex.head == :(::)
+            name = arg_ex.args[1]
+            type = underscore_type = arg_ex.args[end]
+            normalized_arg = arg_ex
+        elseif arg_ex.head == :call
+            if (
+                arg_ex.args[1] == :(:) &&
+                arg_ex.args[2] isa Symbol &&
+                arg_ex.args[3] isa Symbol
+            )
+                type = :InterfaceArg
+                underscore_type = :_
+                name = normalized_arg = arg_ex.args[2]
+
+                push!(interface_arg_names, name)
+
+                interface = arg_ex.args[3]
+                push!(interface_signature, esc(interface))
+                push!(interface_objects, :($(esc(interface))()))
             else
-                error("Syntax error.")
-            end
-        end
-    end
-
-    signature_str = "(" * join(signature_vec, ",") * ")"
-
-    _fname = esc(Symbol("idispatch#$fname$signature_str"))
-
-    # TODO: There seems to be a lot of duplication of code here. See if I can simplify.
-    # I should probably just use a single for loop to build up most of the vectors.
-
-    symbolic_signature = map(signature_args) do ex
-        if ex isa Symbol
-            :Any
-        elseif ex.head == :(::)
-            ex.args[end]
-        elseif ex.head == :call
-            if ex.args[1] == :(:) && ex.args[2] isa Symbol && ex.args[3] isa Symbol
-                :InterfaceArg
-            else
-                error("Syntax error.")
-            end
-        end
-    end
-
-    # Remove interface annotations from arguments.
-    normalized_signature = map(signature_args) do ex
-        if ex.head == :call
-            if ex.args[1] == :(:) && ex.args[2] isa Symbol && ex.args[3] isa Symbol
-                ex.args[2]
-            else
-                error("Syntax error.")
+                throw_idispatch_syntax_error()
             end
         else
-            ex
+            throw_idispatch_syntax_error()
         end
+
+        signature[i] = type
+        underscore_signature[i] = underscore_type
+        arg_names[i] = name
+        normalized_signature_ex[i] = normalized_arg
     end
 
-    interface_args = filter(signature_args) do ex
-        ex.head == :call       &&
-        ex.args[1] == :(:)     &&
-        ex.args[2] isa Symbol  &&
-        ex.args[3] isa Symbol
-    end
-
-    interface_argnames = map(ex -> ex.args[2], interface_args)
-    interface_args_interface_types = map(ex -> esc(ex.args[3]), interface_args)
-    interface_args_interface_objs = map(ex -> :($(esc(ex.args[3]))()), interface_args)
-
-    argnames = map(signature_args) do ex
-        if ex isa Symbol
-            ex
-        elseif ex.head == :(::)
-            ex.args[1]
-        elseif ex.head == :call
-            if ex.args[1] == :(:) && ex.args[2] isa Symbol && ex.args[3] isa Symbol
-                ex.args[2]
-            else
-                error("Syntax error.")
-            end
-        end
-    end
+    underscore_signature_str = "(" * join(underscore_signature, ",") * ")"
+    _f_name = esc(Symbol("idispatch#$f_name_sym$underscore_signature_str"))
 
     quote
         if (
-            !isdefined(@__MODULE__, $(QuoteNode(fname))) ||
-            !is_signature_defined($efname, ($(symbolic_signature...), ))
+            !isdefined(@__MODULE__, $(QuoteNode(f_name_sym))) ||
+            !is_signature_defined($f_name, ($(signature...), ))
         )
-            function $efname($(normalized_signature...))
-                dispatch_to = dispatch($_fname, ($(interface_argnames...), ))
-                $_fname(dispatch_to, $(argnames...))
+            function $f_name($(normalized_signature_ex...))
+                dispatch_to = dispatch($_f_name, ($(interface_arg_names...), ))
+                $_f_name(dispatch_to, $(arg_names...))
             end
 
-            function $_fname(::NoMatchingIDispatchMethod, $(argnames...))
+            function $_f_name(::NoMatchingIDispatchMethod, $(arg_names...))
                 throw(NoMatchingIDispatchMethodError())
             end
 
-            function $_fname(::SingleArgumentAmbiguity, $(argnames...))
+            function $_f_name(::SingleArgumentAmbiguity, $(arg_names...))
                 throw(SingleArgumentAmbiguityError())
             end
 
-            function $_fname(::MultipleArgumentAmbiguity, $(argnames...))
+            function $_f_name(::MultipleArgumentAmbiguity, $(arg_names...))
                 throw(MultipleArgumentAmbiguityError())
             end
 
             let
-                signatures_ = ExtendableInterfaces.signatures($efname)
-                push!(signatures_, ($(symbolic_signature...), ))
-                ExtendableInterfaces.signatures(::typeof($efname)) = signatures_
+                signatures_ = ExtendableInterfaces.signatures($f_name)
+                push!(signatures_, ($(signature...), ))
+                ExtendableInterfaces.signatures(::typeof($f_name)) = signatures_
             end
         end
-        $_fname(::Tuple{$(interface_args_interface_types...)}, $(argnames...)) = $(body.args...)
+        $_f_name(::Tuple{$(interface_signature...)}, $(arg_names...)) = $(body.args...)
 
         let
-            dispatches = ExtendableInterfaces.interface_args_dispatches($_fname)
+            dispatches = ExtendableInterfaces.interface_args_dispatches($_f_name)
             updated_dispatches = update_interface_dispatches(
                 dispatches,
-                ($(interface_args_interface_objs...), )
+                ($(interface_objects...), )
             )
-            ExtendableInterfaces.interface_args_dispatches(::typeof($_fname)) = updated_dispatches
+            ExtendableInterfaces.interface_args_dispatches(::typeof($_f_name)) = updated_dispatches
         end
 
         let
-            signatures_ = ExtendableInterfaces.interface_signatures($_fname)
-            updated_signatures = (signatures_..., ($(interface_args_interface_objs...), ))
-            ExtendableInterfaces.interface_signatures(::typeof($_fname)) = updated_signatures
+            signatures_ = ExtendableInterfaces.interface_signatures($_f_name)
+            updated_signatures = (signatures_..., ($(interface_objects...), ))
+            ExtendableInterfaces.interface_signatures(::typeof($_f_name)) = updated_signatures
         end
 
         # Function definitions return the generic function:
-        $efname
+        $f_name
     end
 end
 
