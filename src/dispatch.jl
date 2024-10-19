@@ -161,6 +161,8 @@ macro idispatch(fdef)
         end
         $_f_name(::Tuple{$(interface_signature...)}, $(arg_names...)) = $(body.args...)
 
+        # TODO: It looks like I might not be using this in dispatch anymore, so
+        # it can probably be deleted.
         let
             dispatches = ExtendableInterfaces.interface_args_dispatches($_f_name)
             updated_dispatches = update_interface_dispatches(
@@ -229,7 +231,7 @@ end
 _most_specific(::Tuple, ::Tuple{}) = SingleArgumentAmbiguity()
 
 
-function dispatch(f, interface_args)
+Base.@assume_effects :foldable function dispatch(f, interface_args)
     argwise_implemented = map_t(implements, interface_args)
 
     matching_signatures = filter_t(interface_signatures(f)) do signature

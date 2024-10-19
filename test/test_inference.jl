@@ -44,12 +44,12 @@ struct Cat end
 @type Cat implements B
 @type Cat implements E
 
-@inferred dispatch(foo, (Cat(), ))
+@inferred dispatch(var"idispatch#foo(_)", (Cat(), ))
 
 struct Dog end
 @type Dog implements C, D
 
-@inferred dispatch(foo, (Dog(), ))
+@inferred dispatch(var"idispatch#foo(_)", (Dog(), ))
 
 
 # ---- bar ----
@@ -63,12 +63,12 @@ struct Bear end
 @type Bear implements D
 @type Bear implements E
 
-@inferred dispatch(bar, (Bear(), ))
+@inferred dispatch(var"idispatch#bar(_)", (Bear(), ))
 
 struct Fish end
 @type Fish implements C, D
 
-@inferred dispatch(bar, (Fish(), ))
+@inferred dispatch(var"idispatch#bar(_)", (Fish(), ))
 
 
 # ---- asdf ----
@@ -79,23 +79,23 @@ struct Fish end
 struct Squid end
 @type Squid implements B, D
 
-@inferred dispatch(asdf, (Squid(), ))
+@inferred dispatch(var"idispatch#asdf(_)", (Squid(), ))
 
 struct Crow end
 @type Crow implements B
 @type Crow implements H
 
-@inferred dispatch(asdf, (Crow(), ))
+@inferred dispatch(var"idispatch#asdf(_)", (Crow(), ))
 
 struct Raven end
 @type Raven implements B, E
 
-@inferred dispatch(asdf, (Raven(), ))
+@inferred dispatch(var"idispatch#asdf(_)", (Raven(), ))
 
 struct Goat end
 @type Goat implements H
 
-@inferred dispatch(asdf, (Goat(), ))
+@inferred dispatch(var"idispatch#asdf(_)", (Goat(), ))
 
 
 # ---- qwer ----
@@ -107,24 +107,24 @@ struct Goat end
 struct Lizard end
 @type Lizard implements A, B, C
 
-@inferred dispatch(qwer, (Lizard(), ))
+@inferred dispatch(var"idispatch#qwer(_)", (Lizard(), ))
 
 struct Toad end
 @type Toad implements B
 @type Toad implements C
 @type Toad implements D
 
-@inferred dispatch(qwer, (Toad(), ))
+@inferred dispatch(var"idispatch#qwer(_)", (Toad(), ))
 
 struct Rabbit end
 @type Rabbit implements A
 
-@inferred dispatch(qwer, (Rabbit(), ))
+@inferred dispatch(var"idispatch#qwer(_)", (Rabbit(), ))
 
 struct Eagle end
 @type Eagle implements B
 
-@inferred dispatch(qwer, (Eagle(), ))
+@inferred dispatch(var"idispatch#qwer(_)", (Eagle(), ))
 
 
 # -------- Transitive "implements" declarations. --------
@@ -164,8 +164,8 @@ struct Frog end
 @type Frog implements N
 @type Frog implements Q
 
-@inferred dispatch(baz, (Turtle(), ))
-@inferred dispatch(bbb, (Frog(), ))
-@inferred dispatch(aaa, (Turtle(), ))
+@inferred dispatch(var"idispatch#baz(_)", (Turtle(), ))
+@inferred dispatch(var"idispatch#bbb(_)", (Frog(), ))
+@inferred dispatch(var"idispatch#aaa(_)", (Turtle(), ))
 
 end # module
