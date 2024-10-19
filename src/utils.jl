@@ -1,35 +1,40 @@
 
 
-# This function assumes that `s` and `t` do not contain any duplicates.
-tuple_intersect(s::Tuple, t::Tuple) = _tuple_intersect((), s, t)
+# Most of the functions in this file have analogs in Base Julia, but
+# they typically have recursion or unrolling limits, which we cannot
+# have in this package. Also, we need to be in full control of the
+# implementations so that we can use `Base.@assume_effects :foldable`
+# with reasonable confidence.
 
-Base.@assume_effects :foldable function _tuple_intersect(out::Tuple, s::Tuple, t::Tuple)
+
+# This function assumes that `s` and `t` do not contain any duplicates.
+intersect_t(::Tuple{}, t::Tuple) = ()
+
+function intersect_t(s::Tuple, t::Tuple)
     s1 = s[1]
     s_tail = tail(s)
-    if in_tuple(s1, t)
-        _tuple_intersect((out..., s1), s_tail, t)
+
+    if in_t(s1, t)
+        (s1, intersect_t(s_tail, t)...)
     else
-        _tuple_intersect(out, s_tail, t)
+        intersect_t(s_tail, t)
     end
 end
-
-_tuple_intersect(out::Tuple, ::Tuple{}, ::Tuple) = out
 
 
 # This function assumes that `s` and `t` do not contain any duplicates.
-tuple_union(s::Tuple, t::Tuple) = _tuple_union(s, s, t)
+union_t(::Tuple{}, t::Tuple) = t
 
-Base.@assume_effects :foldable function _tuple_union(out::Tuple, s::Tuple, t::Tuple)
-    t1 = t[1]
-    t_tail = tail(t)
-    if in_tuple(t1, s)
-        _tuple_union(out, s, t_tail)
+function union_t(s::Tuple, t::Tuple)
+    s1 = s[1]
+    s_tail = tail(s)
+
+    if in_t(s1, t)
+        union_t(s_tail, t)
     else
-        _tuple_union((out..., t1), s, t_tail)
+        (s1, union_t(s_tail, t)...)
     end
 end
-
-_tuple_union(out::Tuple, ::Tuple, ::Tuple{}) = out
 
 
 tail(::Tuple{Any}) = ()
@@ -45,41 +50,90 @@ function tail(x::Tuple{Any, Vararg{Any, N}}) where {N}
 end
 
 
-in_tuple(x::S, t::Tuple{T, Vararg}) where {S, T} = in_tuple(x, tail(t))
-in_tuple(::T, t::Tuple{T, Vararg}) where {T} = true
-in_tuple(_, t::Tuple{}) = false
+in_t(x::S, t::Tuple{T, Vararg}) where {S, T} = in_t(x, tail(t))
+in_t(::T, t::Tuple{T, Vararg}) where {T} = true
+in_t(_, t::Tuple{}) = false
 
 
-delete(t::Tuple, x) = _delete(x, (), t)
+# NOTE: This function assumes that the elements of the input tuple are unique.
+delete(::Tuple{}, x) = ()
+delete(t::Tuple{T, Vararg}, ::T) where {T} = tail(t)
 
-Base.@assume_effects :foldable function _delete(
-    x::S,
-    left::Tuple,
-    right::Tuple{T, Vararg}
-) where {S, T}
-    _delete(x, (left..., right[1]), tail(right))
+function delete(t::Tuple{S, Vararg}, x::T) where {S, T}
+    (t[1], delete(tail(t), x)...)
 end
 
-_delete(::T, left::Tuple, right::Tuple{T, Vararg}) where {T} = (left..., tail(right)...)
-_delete(_, left::Tuple, right::Tuple{}) = left
+
+map_t(f, ::Tuple{}) = ()
+
+function map_t(f, t::Tuple)
+    (
+        f(t[1]),
+        map_t(f, tail(t))...
+    )
+end
 
 
-# This function is not part of the dispatch machinery, so it does not need to compile away.
-# This function returns all (possibly transitive) superinterfaces of
-# `interface`, including `interface`.
-function ancestors(interface::Interface)
-    visited = ()
-    stack = Interface[interface]
+map_t(f, ::Tuple{}, ::Tuple{}) = ()
 
-    while !isempty(stack)
-        interface = pop!(stack)
-        if !in_tuple(interface, visited)
-            visited = (visited..., interface)
-            for superinterface in superinterfaces(interface)
-                push!(stack, superinterface)
-            end
+function map_t(f, t::Tuple, s::Tuple)
+    (
+        f(t[1], s[1]),
+        map_t(f, tail(t), tail(s))...
+    )
+end
+
+
+filter_t(f, ::Tuple{}) = ()
+
+function filter_t(f, t::Tuple)
+    if f(t[1])
+        (t[1], filter_t(f, tail(t))...)
+    else
+        filter_t(f, tail(t))
+    end
+end
+
+
+# `f` is a binary function.
+all_t(f, ::Tuple{}, ::Tuple{}) = true
+
+function all_t(f, s::Tuple, t::Tuple)
+    if f(s[1], t[1])
+        all_t(f, tail(s), tail(t))
+    else
+        false
+    end
+end
+
+
+unique_t(::Tuple{}) = ()
+
+function unique_t(t::Tuple)
+    first = t[1]
+    rest = tail(t)
+
+    if in_t(first, rest)
+        unique_t(rest)
+    else
+        (first, unique_t(rest)...)
+    end
+end
+
+
+foldl_t(f, acc, ::Tuple{}) = acc
+foldl_t(f, acc, t::Tuple) = foldl_t(f, f(acc, t[1]), tail(t))
+
+
+# Just for completeness. I don't think we actually need this anywhere.
+transpose_t(::Tuple{}) = ()
+
+# Take an m-tuple of n-tuples and turn it into an n-tuple of m-tuples.
+function transpose_t(ts::Tuple)
+    init = map_t(_ -> (), ts[1])
+    foldl_t(init, ts) do acc, t
+        map_t(acc, t) do acc_arg, t_arg
+            (acc_arg..., t_arg)
         end
     end
-
-    visited
 end

@@ -64,6 +64,13 @@ function throw_at_least_one_method_error()
 end
 
 
+# TODO:
+# - Add an `Intersection` type and overload `+(a::Interface, b::Interface)` so that
+#   it is equivalent to `Intersection{a, b}`.
+# - Require any interface that extends other interfaces to include at least one required method.
+#     - The first bullet point makes it easy to add an alias for an intersection type.
+
+
 # We could just leave this undefined and thus get a method error, but macro
 # method errors are usually not very informative.
 macro interface(name::Symbol)
@@ -120,9 +127,30 @@ function throw_type_macro_syntax_error()
 end
 
 
+# This function is not part of the dispatch machinery, so it does not need to compile away.
+# This function returns all (possibly transitive) superinterfaces of
+# `interface`, including `interface`.
+function ancestors(interface::Interface)
+    visited = ()
+    stack = Interface[interface]
+
+    while !isempty(stack)
+        interface = pop!(stack)
+        if !in_t(interface, visited)
+            visited = (visited..., interface)
+            for superinterface in superinterfaces(interface)
+                push!(stack, superinterface)
+            end
+        end
+    end
+
+    visited
+end
+
+
 function update_implemented(::Type{T}, new_impls::Tuple) where {T}
     foldl(new_impls; init=implements(T)) do implemented, new_impl
-        tuple_union(implemented, ancestors(new_impl))
+        union_t(implemented, ancestors(new_impl))
     end
 end
 
@@ -143,7 +171,7 @@ macro type(type, implements::Symbol, interfaces_ex)
 
     quote
         let
-            implemented = update_implemented($type, tuple($(interfaces...)))
+            implemented = update_implemented($type, ($(interfaces...), ))
             ExtendableInterfaces.implements(::Type{$type}) = implemented
         end
     end

@@ -3,6 +3,7 @@
 using Test
 
 @testset "ExtendableInterfaces.jl" begin
+    include("utils.jl")
     include("interface.jl")
     include("dispatch.jl")
 end

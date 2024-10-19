@@ -2,9 +2,10 @@
 
 module ExtendableInterfaces
 
-export @adhoc, @declare, @interface, @type
+export @idispatch, @interface, @type
 export implements, required_methods, superinterfaces
-export Interface, InterfaceDispatchError
+export Interface
+export NoMatchingIDispatchMethodError, SingleArgumentAmbiguityError, MultipleArgumentAmbiguityError
 
 abstract type Interface end
 
