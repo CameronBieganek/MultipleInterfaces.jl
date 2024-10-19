@@ -1,5 +1,7 @@
 
 
+####################################################################################################
+
 module IDispatchMacroTests
 
 using ExtendableInterfaces
@@ -142,6 +144,7 @@ end
 @idispatch foo(a::Int, b: D, c::Int) = 42
 
 @testset "sixth @idispatch declaration" begin
+
     @test length(methods(foo)) == 3
     @test issetequal(signatures(foo), [
         (Int, InterfaceArg, String, InterfaceArg),
@@ -181,6 +184,8 @@ end
 end
 
 
+
+####################################################################################################
 
 module SingleDispatchTests
 
@@ -378,6 +383,8 @@ end
 
 
 
+####################################################################################################
+
 module MultipleDispatchTests
 
 using Test
@@ -423,7 +430,7 @@ struct Hamster end
 @type Gerbal implements G
 @type Hamster implements H
 
-@testset "multiple argument dispatch: foo" begin
+@testset "multiple-argument dispatch: foo" begin
     @test foo(1, Cat(), Gerbal()) == 1
     @test foo(1, Cat(), Hamster()) == 1
     @test foo(1, Dog(), Gerbal()) == 1
@@ -453,6 +460,262 @@ struct Hamster end
     @test_throws NoMatchingIDispatchMethodError foo(1, Ant(), Hamster())
     @test_throws NoMatchingIDispatchMethodError foo(1, Cat(), Elephant())
     @test_throws NoMatchingIDispatchMethodError foo(1, Dog(), Elephant())
+end
+
+end
+
+
+
+####################################################################################################
+
+module MultipleDispatchSingleArgumentAmbiguityTests
+
+using Test
+using ExtendableInterfaces
+
+function a end
+function b end
+function c end
+
+function m end
+function n end
+
+function p end
+function q end
+function r end
+
+@interface A begin a end
+@interface B extends A begin
+    b
+end
+@interface C extends A begin
+    c
+end
+
+@interface M begin m end
+@interface N extends M begin
+    n
+end
+
+@interface P begin p end
+@interface Q extends P begin
+    q
+end
+@interface R extends P begin
+    r
+end
+
+@idispatch foo(x::Int, a: A, m: M) = 1
+@idispatch foo(x::Int, b: B, m: M) = 2
+@idispatch foo(x::Int, c: C, m: M) = 3
+
+@idispatch bar(x::Int, a: A, p: P) = 1
+@idispatch bar(x::Int, b: B, q: Q) = 2
+@idispatch bar(x::Int, c: C, r: R) = 3
+
+struct Cat end
+struct Dog end
+struct Horse end
+
+@type Cat implements B, C
+@type Dog implements N
+@type Horse implements Q, R
+
+@testset "multiple-dispatch single-argument ambiguity" begin
+    @test_throws SingleArgumentAmbiguityError foo(1, Cat(), Dog())
+    @test_throws SingleArgumentAmbiguityError bar(1, Cat(), Horse())
+end
+
+end
+
+
+
+####################################################################################################
+
+module MultipleDispatchMultipleArgumentAmbiguityTests
+
+using Test
+using ExtendableInterfaces
+
+function a end
+function b end
+
+function p end
+function q end
+
+# A -> B
+@interface A begin a end
+@interface B extends A begin
+    b
+end
+
+# P -> Q
+@interface P begin p end
+@interface Q extends P begin
+    q
+end
+
+@idispatch foo(x::Int, a: A, p: P) = 1
+@idispatch foo(x::Int, b: B, p: P) = 2
+@idispatch foo(x::Int, a: A, q: Q) = 3
+
+struct Cat end
+struct Dog end
+
+@type Cat implements B
+@type Dog implements Q
+
+@testset "multiple-dispatch multiple-argument ambiguity" begin
+    @test_throws MultipleArgumentAmbiguityError foo(1, Cat(), Dog())
+end
+
+end
+
+
+
+####################################################################################################
+
+module ComplicatedMultipleDispatchTests
+
+using Test
+using ExtendableInterfaces
+
+function a end
+function b end
+function c end
+function d end
+function e end
+function f end
+function g end
+function h end
+
+@interface A begin a end
+@interface B begin b end
+@interface C extends A, B begin c end
+@interface D extends B begin d end
+@interface E extends C, D begin e end
+@interface F extends E begin f end
+@interface G extends F begin g end
+
+# Isolated node in interface DAG.
+@interface H begin h end
+
+function m end
+function n end
+function o end
+function p end
+function q end
+function r end
+function s end
+function t end
+
+@interface M begin m end
+@interface N begin n end
+@interface O begin o end
+@interface P extends M, N begin p end
+@interface Q extends N, O begin q end
+@interface R extends P begin r end
+@interface S extends P, Q begin s end
+@interface T extends Q begin t end
+
+struct Cat end
+struct Dog end
+struct Fox end
+struct Horse end
+struct Newt end
+struct Parrot end
+struct Salamander end
+struct Tiger end
+
+struct Chameleon end
+
+@type Cat implements C
+@type Dog implements D
+@type Fox implements F
+@type Horse implements H
+@type Newt implements N
+@type Parrot implements P
+@type Salamander implements S
+@type Tiger implements T
+
+@type Chameleon implements F, S
+
+@idispatch foo(c: C, x::String, n: N) = 1
+@idispatch foo(c: E, x::String, n: N) = 2
+@idispatch foo(c: F, x::String, p: P) = 3
+@idispatch foo(c: G, x::String, n: N) = 4
+
+@testset "complicated DAG: foo" begin
+    @test_throws MethodError foo(Cat(), 42, Parrot())
+    @test_throws MethodError foo(Dog(), 3.14, Horse())
+    @test_throws MethodError foo(Fox(), 42, Parrot())
+
+    @test (
+        foo(Cat(), "a", Newt()) ==
+        foo(Cat(), "a", Parrot()) ==
+        foo(Cat(), "a", Salamander()) ==
+        foo(Cat(), "a", Tiger()) ==
+        foo(Cat(), "a", Chameleon()) ==
+        1
+    )
+
+    @test (
+        foo(Fox(), "a", Tiger()) ==
+        foo(Fox(), "a", Newt()) ==
+        foo(Chameleon(), "a", Tiger()) ==
+        foo(Chameleon(), "a", Newt()) ==
+        2
+    )
+
+    @test_throws NoMatchingIDispatchMethodError foo(Dog(), "a", Newt())
+    @test_throws NoMatchingIDispatchMethodError foo(Dog(), "a", Parrot())
+    @test_throws NoMatchingIDispatchMethodError foo(Dog(), "a", Salamander())
+    @test_throws NoMatchingIDispatchMethodError foo(Dog(), "a", Tiger())
+
+    @test (
+        foo(Fox(), "a", Parrot()) ==
+        foo(Fox(), "a", Salamander()) ==
+        foo(Chameleon(), "a", Parrot()) ==
+        foo(Chameleon(), "a", Salamander()) ==
+        foo(Chameleon(), "a", Chameleon()) ==
+        3
+    )
+end
+
+@idispatch bar(h: H) = 1
+
+@testset "complicated DAG: bar" begin
+    @test bar(Horse()) == 1
+    @test_throws NoMatchingIDispatchMethodError bar(Cat())
+    @test_throws NoMatchingIDispatchMethodError bar(Fox())
+    @test_throws NoMatchingIDispatchMethodError bar(Salamander())
+    @test_throws NoMatchingIDispatchMethodError bar(Tiger())
+    @test_throws NoMatchingIDispatchMethodError bar(Chameleon())
+end
+
+@idispatch asdf(x::Int, n: N, e: E) = 1
+@idispatch asdf(x::Int, p: P, e: E) = 2
+@idispatch asdf(x::Int, q: Q, e: E) = 3
+
+struct Rooster end
+@type Rooster implements P, Q
+
+@testset "complicated DAG: single-argument ambiguity" begin
+    @test_throws MethodError asdf("hello", Newt(), Fox())
+    @test asdf(1, Newt(), Fox()) == 1
+    @test asdf(1, Parrot(), Fox()) == 2
+    @test_throws SingleArgumentAmbiguityError asdf(1, Rooster(), Fox())
+end
+
+@idispatch qwer(c: C, p: P, x::Char) = 1
+@idispatch qwer(f: F, p: P, x::Char) = 2
+@idispatch qwer(c: C, s: S, x::Char) = 3
+
+@testset "complicated DAG: multiple-argument ambiguity" begin
+    @test qwer(Cat(), Parrot(), 'a') == 1
+    @test qwer(Fox(), Parrot(), 'a') == 2
+    @test qwer(Cat(), Salamander(), 'a') == 3
+    @test_throws MultipleArgumentAmbiguityError qwer(Fox(), Salamander(), 'a')
 end
 
 end
