@@ -184,83 +184,16 @@ macro idispatch(fdef)
 end
 
 
-struct Found end
-
-
-is_subinterface(::T, ::T) where {T <: Interface} = true
-
-function is_subinterface(sub::Interface, super::Interface)
-    visit_superinterfaces(superinterfaces(sub), (), super) === Found()
-end
-
-
-function visit_superinterfaces(superinterfaces::Tuple, visited, target)
-    out = visit_interface(superinterfaces[1], visited, target)
-
-    if out === Found()
-        Found()
-    else
-        visit_superinterfaces(tail(superinterfaces), out[1], out[2])
-    end
-end
-
-visit_superinterfaces(::Tuple{}, visited, target) = visited, target
-
-
-function visit_interface(interface, visited, target)
-    if in_t(interface, visited)
-        return visited, target
-    end
-
-    if interface === target
-        return Found()
-    end
-
-    out = visit_superinterfaces(superinterfaces(interface), visited, target)
-
-    if out === Found()
-        Found()
-    else
-        (out[1]..., interface), out[2]
-    end
-end
-
-
 most_specific(xs::Tuple{Any}) = xs[1]
 
 Base.@assume_effects :foldable function most_specific(xs::Tuple)
-    xs2 = remove_superinterfaces_l(xs)
-    xs3 = remove_superinterfaces_r(xs2)
+    xs2 = remove_superinterfaces(xs)
 
-    if length(xs3) == 1
-        xs3[1]
+    if length(xs2) == 1
+        xs2[1]
     else
         SingleArgumentAmbiguity()
     end
-end
-
-
-remove_superinterfaces_l(xs::Tuple{Interface}) = xs
-remove_superinterfaces_l(xs::Tuple) = _remove_superinterfaces_l((), xs)
-_remove_superinterfaces_l(visited, ::Tuple{}) = visited
-
-function _remove_superinterfaces_l(visited, not_visited::Tuple)
-    x = not_visited[1]
-    rest = tail(not_visited)
-    non_superinterfaces = filter_t(y -> !is_subinterface(x, y), rest)
-    _remove_superinterfaces_l((visited..., x), non_superinterfaces)
-end
-
-
-remove_superinterfaces_r(xs::Tuple{Interface}) = xs
-remove_superinterfaces_r(xs::Tuple) = _remove_superinterfaces_r((), xs)
-_remove_superinterfaces_r(visited, ::Tuple{}) = visited
-
-function _remove_superinterfaces_r(visited, not_visited::Tuple)
-    x = not_visited[end]
-    rest = front(not_visited)
-    non_superinterfaces = filter_t(y -> !is_subinterface(x, y), rest)
-    _remove_superinterfaces_r((x, visited...), non_superinterfaces)
 end
 
 

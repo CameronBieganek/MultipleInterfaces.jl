@@ -9,6 +9,9 @@ export NoMatchingIDispatchMethodError, SingleArgumentAmbiguityError, MultipleArg
 
 abstract type Interface end
 
+function required_methods end
+function superinterfaces end
+
 include("utils.jl")
 include("interface.jl")
 include("dispatch.jl")

@@ -1,9 +1,5 @@
 
 
-function required_methods end
-function superinterfaces end
-
-
 function interface_helper(name, superinterfaces, methods_block)
     if isnothing(methods_block)
         methods = ()
