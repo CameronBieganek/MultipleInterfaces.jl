@@ -3,7 +3,7 @@
 module ExtendableInterfaces
 
 export @idispatch, @interface, @type
-export implements, required_methods, superinterfaces
+export implements, is_subinterface, required_methods, superinterfaces
 export Interface
 export NoMatchingIDispatchMethodError, SingleArgumentAmbiguityError, MultipleArgumentAmbiguityError
 

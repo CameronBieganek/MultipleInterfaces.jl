@@ -50,6 +50,17 @@ function tail(x::Tuple{Any, Vararg{Any, N}}) where {N}
 end
 
 
+# Get all elements of a tuple except for the last one.
+front(::Tuple{Any}) = ()
+
+function front(x::Tuple{Vararg{Any, N}}) where {N}
+    f = let x = x
+        i -> x[i]
+    end
+    ntuple(f, Val(N - 1))::NTuple{N - 1, Any}
+end
+
+
 in_t(x::S, t::Tuple{T, Vararg}) where {S, T} = in_t(x, tail(t))
 in_t(::T, t::Tuple{T, Vararg}) where {T} = true
 in_t(_, t::Tuple{}) = false

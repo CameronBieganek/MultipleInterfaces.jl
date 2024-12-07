@@ -17,11 +17,11 @@ function Base.showerror(io::IO, ::NoMatchingIDispatchMethodError)
 end
 
 function Base.showerror(io::IO, ::SingleArgumentAmbiguityError)
-    print(io, "There is a single argument dispatch ambiguity.")
+    print(io, "There is a single argument i-dispatch ambiguity.")
 end
 
 function Base.showerror(io::IO, ::MultipleArgumentAmbiguityError)
-    print(io, "There is a multiple argument dispatch ambiguity.")
+    print(io, "There is a multiple argument i-dispatch ambiguity.")
 end
 
 
@@ -184,51 +184,84 @@ macro idispatch(fdef)
 end
 
 
-function visit_interface(interface, visited::Tuple, targets::Tuple)
+struct Found end
+
+
+is_subinterface(::T, ::T) where {T <: Interface} = true
+
+function is_subinterface(sub::Interface, super::Interface)
+    visit_superinterfaces(superinterfaces(sub), (), super) === Found()
+end
+
+
+function visit_superinterfaces(superinterfaces::Tuple, visited, target)
+    out = visit_interface(superinterfaces[1], visited, target)
+
+    if out === Found()
+        Found()
+    else
+        visit_superinterfaces(tail(superinterfaces), out[1], out[2])
+    end
+end
+
+visit_superinterfaces(::Tuple{}, visited, target) = visited, target
+
+
+function visit_interface(interface, visited, target)
     if in_t(interface, visited)
-        return visited, targets
+        return visited, target
     end
 
-    # If `interface` is not in `targets`, then `delete` just returns `targets`.
-    targets2 = delete(targets, interface)
-    targets2 === () && return nothing
+    if interface === target
+        return Found()
+    end
 
-    out = visit_superinterfaces(superinterfaces(interface), visited, targets2)
-    out === nothing && return nothing
+    out = visit_superinterfaces(superinterfaces(interface), visited, target)
 
-    (out[1]..., interface), out[2]
-end
-
-function visit_superinterfaces(superinterfaces::Tuple, visited::Tuple, targets::Tuple)
-    out = visit_interface(superinterfaces[1], visited, targets)
-    out === nothing && return nothing
-    visit_superinterfaces(tail(superinterfaces), out[1], out[2])
-end
-
-visit_superinterfaces(::Tuple{}, visited::Tuple, targets::Tuple) = visited, targets
-
-
-function is_subinterface_all(interface, targets::Tuple)
-    visit_superinterfaces(superinterfaces(interface), (), targets) === nothing
+    if out === Found()
+        Found()
+    else
+        (out[1]..., interface), out[2]
+    end
 end
 
 
 most_specific(xs::Tuple{Any}) = xs[1]
-most_specific(xs::Tuple) = _most_specific((), xs)
 
-# TODO: Can I simplify this recursion too?
-# Maybe use `any_t` (which I haven't written yet).
-Base.@assume_effects :foldable function _most_specific(left::Tuple, right::Tuple)
-    x = right[1]
-    rest = tail(right)
-    if is_subinterface_all(x, (left..., rest...))
-        x
+Base.@assume_effects :foldable function most_specific(xs::Tuple)
+    xs2 = remove_superinterfaces_l(xs)
+    xs3 = remove_superinterfaces_r(xs2)
+
+    if length(xs3) == 1
+        xs3[1]
     else
-        _most_specific((left..., x), rest)
+        SingleArgumentAmbiguity()
     end
 end
 
-_most_specific(::Tuple, ::Tuple{}) = SingleArgumentAmbiguity()
+
+remove_superinterfaces_l(xs::Tuple{Interface}) = xs
+remove_superinterfaces_l(xs::Tuple) = _remove_superinterfaces_l((), xs)
+_remove_superinterfaces_l(visited, ::Tuple{}) = visited
+
+function _remove_superinterfaces_l(visited, not_visited::Tuple)
+    x = not_visited[1]
+    rest = tail(not_visited)
+    non_superinterfaces = filter_t(y -> !is_subinterface(x, y), rest)
+    _remove_superinterfaces_l((visited..., x), non_superinterfaces)
+end
+
+
+remove_superinterfaces_r(xs::Tuple{Interface}) = xs
+remove_superinterfaces_r(xs::Tuple) = _remove_superinterfaces_r((), xs)
+_remove_superinterfaces_r(visited, ::Tuple{}) = visited
+
+function _remove_superinterfaces_r(visited, not_visited::Tuple)
+    x = not_visited[end]
+    rest = front(not_visited)
+    non_superinterfaces = filter_t(y -> !is_subinterface(x, y), rest)
+    _remove_superinterfaces_r((x, visited...), non_superinterfaces)
+end
 
 
 Base.@assume_effects :foldable function dispatch(f, interface_args)
