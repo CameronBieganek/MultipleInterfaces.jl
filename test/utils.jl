@@ -5,7 +5,8 @@ module UtilsTests
 using Test
 using ExtendableInterfaces
 using ExtendableInterfaces: all_t, ancestors, delete, filter_t, foldl_t, in_t
-using ExtendableInterfaces: intersect_t, map_t, tail, transpose_t, union_t, unique_t
+using ExtendableInterfaces: intersect_t, map_t, remove_superinterfaces, tail
+using ExtendableInterfaces: transpose_t, union_t, unique_t
 
 
 function a end
@@ -217,6 +218,40 @@ end
     @test !is_subinterface(D(), H())
     @test !is_subinterface(H(), B())
     @test !is_subinterface(H(), E())
+end
+
+
+@testset "remove_superinterfaces" begin
+    @test remove_superinterfaces((A(), B(), C(), D(), E(), F(), G())) == (G(), )
+    @test remove_superinterfaces((G(), F(), E(), D(), C(), B(), A())) == (G(), )
+    @test issetequal(
+        remove_superinterfaces((A(), B(), C(), D(), E(), F(), G(), H())),
+        (G(), H())
+    )
+    @test issetequal(
+        remove_superinterfaces((A(), B(), H())),
+        (A(), B(), H())
+    )
+    @test issetequal(
+        remove_superinterfaces((A(), B(), C(), D(), E(), F(), G(), H())),
+        (G(), H())
+    )
+    @test issetequal(
+        remove_superinterfaces((A(), B(), C(), D())),
+        (C(), D())
+    )
+    @test (
+        remove_superinterfaces((A(), B(), C())) ==
+        remove_superinterfaces((B(), A(), C())) ==
+        remove_superinterfaces((C(), B(), A())) ==
+        (C(), )
+    )
+    @test remove_superinterfaces((A(), F(), C(), D())) == (F(), )
+    @test (
+        remove_superinterfaces((E(), G())) ==
+        remove_superinterfaces((G(), E())) ==
+        (G(), )
+    )
 end
 
 end
