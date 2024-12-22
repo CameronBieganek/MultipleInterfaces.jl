@@ -150,14 +150,22 @@ function transpose_t(ts::Tuple)
 end
 
 
-struct Found end
+function is_subinterface(::Type{S}, ::Type{T}) where {S <: Interface, T <: Interface}
+    _is_subinterface(S(), T())
+end
+
+const ≼ = is_subinterface
+const ⋠ = !is_subinterface
 
 
-is_subinterface(::T, ::T) where {T <: Interface} = true
+_is_subinterface(::T, ::T) where {T <: Interface} = true
 
-function is_subinterface(sub::Interface, super::Interface)
+function _is_subinterface(sub::Interface, super::Interface)
     visit_superinterfaces(superinterfaces(sub), (), super) === Found()
 end
+
+
+struct Found end
 
 
 function visit_superinterfaces(superinterfaces::Tuple, visited, target)
@@ -204,7 +212,7 @@ _remove_superinterfaces_l(visited, ::Tuple{}) = visited
 function _remove_superinterfaces_l(visited, not_visited::Tuple)
     x = not_visited[1]
     rest = tail(not_visited)
-    non_superinterfaces = filter_t(y -> !is_subinterface(x, y), rest)
+    non_superinterfaces = filter_t(y -> !_is_subinterface(x, y), rest)
     _remove_superinterfaces_l((visited..., x), non_superinterfaces)
 end
 
@@ -216,6 +224,6 @@ _remove_superinterfaces_r(visited, ::Tuple{}) = visited
 function _remove_superinterfaces_r(visited, not_visited::Tuple)
     x = not_visited[end]
     rest = front(not_visited)
-    non_superinterfaces = filter_t(y -> !is_subinterface(x, y), rest)
+    non_superinterfaces = filter_t(y -> !_is_subinterface(x, y), rest)
     _remove_superinterfaces_r((x, visited...), non_superinterfaces)
 end

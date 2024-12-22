@@ -194,30 +194,38 @@ end
 
 
 @testset "is_subinterface" begin
-    @test is_subinterface(C(), A())
-    @test is_subinterface(C(), B())
-    @test is_subinterface(D(), B())
-    @test is_subinterface(E(), C())
-    @test is_subinterface(E(), D())
-    @test is_subinterface(F(), E())
-    @test is_subinterface(G(), F())
-    @test is_subinterface(G(), A())
-    @test is_subinterface(G(), B())
-    @test is_subinterface(F(), D())
-    @test is_subinterface(E(), A())
-    @test is_subinterface(E(), B())
-    @test !is_subinterface(A(), B())
-    @test !is_subinterface(B(), A())
-    @test !is_subinterface(A(), C())
-    @test !is_subinterface(B(), C())
-    @test !is_subinterface(D(), A())
-    @test !is_subinterface(E(), F())
-    @test !is_subinterface(F(), G())
-    @test !is_subinterface(E(), G())
-    @test !is_subinterface(A(), H())
-    @test !is_subinterface(D(), H())
-    @test !is_subinterface(H(), B())
-    @test !is_subinterface(H(), E())
+    @test is_subinterface(C, A)
+    @test is_subinterface(C, B)
+    @test is_subinterface(D, B)
+    @test is_subinterface(E, C)
+    @test is_subinterface(E, D)
+    @test is_subinterface(F, E)
+    @test is_subinterface(G, F)
+    @test is_subinterface(G, A)
+    @test is_subinterface(G, B)
+    @test is_subinterface(F, D)
+    @test is_subinterface(E, A)
+    @test is_subinterface(E, B)
+    @test !is_subinterface(A, B)
+    @test !is_subinterface(B, A)
+    @test !is_subinterface(A, C)
+    @test !is_subinterface(B, C)
+    @test !is_subinterface(D, A)
+    @test !is_subinterface(E, F)
+    @test !is_subinterface(F, G)
+    @test !is_subinterface(E, G)
+    @test !is_subinterface(A, H)
+    @test !is_subinterface(D, H)
+    @test !is_subinterface(H, B)
+    @test !is_subinterface(H, E)
+
+    @test C ≼ A
+    @test C ≼ B
+    @test D ≼ B
+
+    @test A ⋠ B
+    @test B ⋠ A
+    @test A ⋠ C
 end
 
 
