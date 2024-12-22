@@ -32,9 +32,6 @@ function interface_helper(name, superinterfaces, methods_block)
 
         ExtendableInterfaces.superinterfaces(::$name) = $superinterface_objs
         ExtendableInterfaces.required_methods(::$name) = ($(methods...),)
-
-        Base.show(io::IO, ::$name) = print(io, $name_str, "()")
-        Base.show(io::IO, ::MIME"text/plain", ::$name) = print(io, "Interface: ", $name_str)
     end
 
     esc(ex)
@@ -50,8 +47,8 @@ function check_methods_block_head(methods_block)
 end
 
 
-# TODO: Get rid of this. Eq <: PartialEq is a good example of a case where you want
-# to extend a single interface without adding any methods.
+# TODO: Enforce that every interface contain at least one required method.
+# I.e., not just root interfaces.
 function throw_at_least_one_method_error()
     throw(ArgumentError(
         "An interface that does not extend any other interface must require " *
