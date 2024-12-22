@@ -2,6 +2,7 @@
 
 module ExtendableInterfaces
 
+export ≼, ⋠
 export @idispatch, @interface, @type
 export implements, is_subinterface, required_methods, superinterfaces
 export Interface
