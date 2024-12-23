@@ -5,7 +5,6 @@ module ExtendableInterfaces
 export ≼, ⋠
 export @idispatch, @interface, @type
 export implements, is_subinterface, required_methods, superinterfaces
-export Interface  # TODO: Update macro hygiene so this does not need to be exported.
 export NoMatchingIDispatchMethodError, SingleArgumentAmbiguityError, MultipleArgumentAmbiguityError
 
 abstract type Interface end

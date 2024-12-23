@@ -14,27 +14,29 @@ function interface_helper(name, superinterfaces, methods_block)
         end
 
         methods = filter(arg -> arg isa Symbol, methods_block.args)
+        methods = map(m -> esc(m), methods)
     end
 
-    superinterface_objs = Expr(:tuple, map(s -> :($s()), superinterfaces.args)...)
+    esc_superinterfaces = map(s -> esc(s), superinterfaces.args)
+    esc_superinterface_objs = Expr(:tuple, map(s -> :($s()), esc_superinterfaces)...)
 
-    name_str = String(name)
+    esc_name = esc(name)
 
     ex = quote
         # This will throw an `UndefVarErr` if any of the declared superinterfaces
         # are not yet defined.
-        $(superinterfaces.args...)
+        $(esc_superinterfaces...)
 
         # Ditto for the declared methods of the interface.
         $(methods...)
 
-        struct $name <: Interface end
+        struct $esc_name <: Interface end
 
-        ExtendableInterfaces.superinterfaces(::$name) = $superinterface_objs
-        ExtendableInterfaces.required_methods(::$name) = ($(methods...),)
+        ExtendableInterfaces.superinterfaces(::$esc_name) = $esc_superinterface_objs
+        ExtendableInterfaces.required_methods(::$esc_name) = ($(methods...),)
     end
 
-    esc(ex)
+    ex
 end
 
 
