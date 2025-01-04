@@ -9,9 +9,9 @@ export NoMatchingIDispatchMethodError, SingleArgumentAmbiguityError, MultipleArg
 
 abstract type Interface end
 
-# TODO: Update these so they operate on `Interface` types rather than instances.
-function required_methods end
-function superinterfaces end
+# TODO: Use hidden names for the methods that are overloaded by macros, and
+# add something like `import ExtendableInterfaces: var"#interface_signatures#"` to
+# the macro expansions.
 
 include("utils.jl")
 include("interface.jl")

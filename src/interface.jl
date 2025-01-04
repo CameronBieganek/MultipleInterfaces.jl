@@ -1,5 +1,26 @@
 
 
+# This function gets overloaded by the `@interface` macro in the user scope.
+function var"#ExtendableInterfaces#superinterfaces#" end
+
+# A more convenient name for internal usage.
+_superinterfaces(x::Interface) = var"#ExtendableInterfaces#superinterfaces#"(x)
+
+# The exported version that dispatches on interface types rather than instances.
+function superinterfaces(I::Type{<:Interface})
+    map(typeof, var"#ExtendableInterfaces#superinterfaces#"(I()))
+end
+
+
+# This function gets overloaded by the `@interface` macro in the user scope.
+function var"#ExtendableInterfaces#required_methods#" end
+
+# The exported version that dispatches on interface types rather than instances.
+function required_methods(I::Type{<:Interface})
+    var"#ExtendableInterfaces#required_methods#"(I())
+end
+
+
 function interface_helper(name, superinterfaces, methods_block)
     if isnothing(methods_block)
         methods = ()
@@ -22,7 +43,7 @@ function interface_helper(name, superinterfaces, methods_block)
 
     esc_name = esc(name)
 
-    ex = quote
+    quote
         # This will throw an `UndefVarErr` if any of the declared superinterfaces
         # are not yet defined.
         $(esc_superinterfaces...)
@@ -32,11 +53,19 @@ function interface_helper(name, superinterfaces, methods_block)
 
         struct $esc_name <: Interface end
 
-        ExtendableInterfaces.superinterfaces(::$esc_name) = $esc_superinterface_objs
-        ExtendableInterfaces.required_methods(::$esc_name) = ($(methods...),)
-    end
+        import ExtendableInterfaces: var"#ExtendableInterfaces#superinterfaces#"
+        import ExtendableInterfaces: var"#ExtendableInterfaces#required_methods#"
 
-    ex
+        function $(esc(Symbol("#ExtendableInterfaces#superinterfaces#")))(::$esc_name)
+            $esc_superinterface_objs
+        end
+
+        function $(esc(Symbol("#ExtendableInterfaces#required_methods#")))(::$esc_name)
+            ($(methods...),)
+        end
+
+        nothing
+    end
 end
 
 
@@ -57,13 +86,6 @@ function throw_at_least_one_method_error()
         "at least one method."
     ))
 end
-
-
-# TODO:
-# - Add an `Intersection` type and overload `+(a::Interface, b::Interface)` so that
-#   it is equivalent to `Intersection{a, b}`.
-# - Require any interface that extends other interfaces to include at least one required method.
-#     - The first bullet point makes it easy to add an alias for an intersection type.
 
 
 # We could just leave this undefined and thus get a method error, but macro
@@ -133,7 +155,7 @@ function ancestors(interface::Interface)
         interface = pop!(stack)
         if !in_t(interface, visited)
             visited = (visited..., interface)
-            for superinterface in superinterfaces(interface)
+            for superinterface in _superinterfaces(interface)
                 push!(stack, superinterface)
             end
         end

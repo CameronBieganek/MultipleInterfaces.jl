@@ -161,7 +161,7 @@ const ⋠ = !is_subinterface
 _is_subinterface(::T, ::T) where {T <: Interface} = true
 
 function _is_subinterface(sub::Interface, super::Interface)
-    visit_superinterfaces(superinterfaces(sub), (), super) === Found()
+    visit_superinterfaces(_superinterfaces(sub), (), super) === Found()
 end
 
 
@@ -190,7 +190,7 @@ function visit_interface(interface, visited, target)
         return Found()
     end
 
-    out = visit_superinterfaces(superinterfaces(interface), visited, target)
+    out = visit_superinterfaces(_superinterfaces(interface), visited, target)
 
     if out === Found()
         Found()
