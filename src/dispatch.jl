@@ -29,10 +29,8 @@ signatures(f) = Tuple[]
 is_signature_defined(f, signature) = (signature in signatures(f))
 
 
-# `interface_args_dispatches` returns a separate tuple for each argument, whereas
-# `interface_signatures` returns a tuple of signature tuples, where each signature
-# tuple indicates the interfaces that are dispatched on for one i-dispatch method.
-interface_args_dispatches(f) = ()
+# Return a tuple of signature tuples, where each signature tuple indicates the
+# interfaces that are dispatched on for one i-dispatch method.
 interface_signatures(f) = ()
 
 
@@ -160,17 +158,6 @@ macro idispatch(fdef)
             end
         end
         $_f_name(::Tuple{$(interface_signature...)}, $(arg_names...)) = $(body.args...)
-
-        # TODO: It looks like I might not be using this in dispatch anymore, so
-        # it can probably be deleted.
-        let
-            dispatches = ExtendableInterfaces.interface_args_dispatches($_f_name)
-            updated_dispatches = update_interface_dispatches(
-                dispatches,
-                ($(interface_objects...), )
-            )
-            ExtendableInterfaces.interface_args_dispatches(::typeof($_f_name)) = updated_dispatches
-        end
 
         let
             signatures_ = ExtendableInterfaces.interface_signatures($_f_name)
