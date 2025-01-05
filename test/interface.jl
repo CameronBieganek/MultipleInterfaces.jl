@@ -143,11 +143,11 @@ struct Crocodile end
 
 
 @testset "@type" begin
-    @test implements(Cat) == (A(), )
-    @test implements(Dog) == (B(), )
-    @test issetequal(implements(Fox), (A(), B()))
-    @test issetequal(implements(Alligator), (A(), B(), C()))
-    @test issetequal(implements(Crocodile), (A(), B(), C()))
+    @test implements(Cat) == (A, )
+    @test implements(Dog) == (B, )
+    @test issetequal(implements(Fox), (A, B))
+    @test issetequal(implements(Alligator), (A, B, C))
+    @test issetequal(implements(Crocodile), (A, B, C))
 end
 
 end

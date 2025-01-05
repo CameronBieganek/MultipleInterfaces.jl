@@ -25,6 +25,12 @@ function Base.showerror(io::IO, ::MultipleArgumentAmbiguityError)
 end
 
 
+# TODO: Make `signatures` and `interface_signatures` hidden.
+# TODO: Add unit tests to make sure everything works when `ExtendableInterfaces` is
+# not in scope. I.e., when the user does this:
+# `using ExtendableInterfaces: @interface, @type, @idispatch`.
+
+
 signatures(f) = Tuple[]
 is_signature_defined(f, signature) = (signature in signatures(f))
 
@@ -185,7 +191,7 @@ end
 
 
 Base.@assume_effects :foldable function dispatch(f, interface_args)
-    argwise_implemented = map_t(implements, interface_args)
+    argwise_implemented = map_t(_implements, interface_args)
 
     matching_signatures = filter_t(interface_signatures(f)) do signature
         all_t(in_t, signature, argwise_implemented)

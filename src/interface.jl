@@ -132,8 +132,15 @@ macro interface(
 end
 
 
-implements(::Type{T}) where {T} = ()
-implements(::T) where {T} = implements(T)
+# This function gets overloaded by the `@type` macro in the user scope.
+var"#ExtendableInterfaces#implements#"(::Type) = ()
+
+# A more convenient name for internal usage.
+_implements(T::Type) = var"#ExtendableInterfaces#implements#"(T)
+_implements(::T) where {T} = _implements(T)
+
+# The exported version. Returns interface types rather than instances.
+implements(T::Type) = map(typeof, _implements(T))
 
 
 function throw_type_macro_syntax_error()
@@ -166,7 +173,7 @@ end
 
 
 function update_implemented(::Type{T}, new_impls::Tuple) where {T}
-    foldl(new_impls; init=implements(T)) do implemented, new_impl
+    foldl(new_impls; init=_implements(T)) do implemented, new_impl
         union_t(implemented, ancestors(new_impl))
     end
 end
@@ -187,9 +194,18 @@ macro type(type, implements::Symbol, interfaces_ex)
     interfaces = map(sym -> :($(esc(sym))()), interface_syms)
 
     quote
+        import ExtendableInterfaces: var"#ExtendableInterfaces#implements#"
+
         let
+            global var"#ExtendableInterfaces#implements#"
+
             implemented = update_implemented($type, ($(interfaces...), ))
-            ExtendableInterfaces.implements(::Type{$type}) = implemented
+
+            function $(esc(Symbol("#ExtendableInterfaces#implements#")))(::Type{$type})
+                implemented
+            end
         end
+
+        nothing
     end
 end
