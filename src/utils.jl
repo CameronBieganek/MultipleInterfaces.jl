@@ -150,7 +150,7 @@ function transpose_t(ts::Tuple)
 end
 
 
-function is_subinterface(::Type{S}, ::Type{T}) where {S <: Interface, T <: Interface}
+function is_subinterface(S::Type{<:ConcreteInterface}, T::Type{<:ConcreteInterface})
     _is_subinterface(S(), T())
 end
 
@@ -158,9 +158,9 @@ const ≼ = is_subinterface
 const ⋠ = !is_subinterface
 
 
-_is_subinterface(::T, ::T) where {T <: Interface} = true
+_is_subinterface(::T, ::T) where {T <: ConcreteInterface} = true
 
-function _is_subinterface(sub::Interface, super::Interface)
+function _is_subinterface(sub::ConcreteInterface, super::ConcreteInterface)
     visit_superinterfaces(_superinterfaces(sub), (), super) === Found()
 end
 

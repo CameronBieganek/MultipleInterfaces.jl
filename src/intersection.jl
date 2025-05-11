@@ -1,6 +1,6 @@
 
 
-const InterfaceInstances = Tuple{Interface, Interface, Vararg{Interface}}
+const InterfaceInstances = Tuple{ConcreteInterface, ConcreteInterface, Vararg{ConcreteInterface}}
 
 
 struct Intersection{T <: InterfaceInstances} <: Interface
@@ -20,10 +20,11 @@ end
 
 # `&` is the public interface for interface intersection, e.g. `A & B`.
 
-Base.:&(::Type{S}, ::Type{S}) where {S <: Interface} = S
-Base.:&(S::Type{<:Interface}, T::Type{<:Interface}) = simplify((S(), T()))
-Base.:&(s::Intersection, T::Type{<:Interface}) = simplify((s.interfaces..., T()))
-Base.:&(S::Type{<:Interface}, t::Intersection) = simplify((S(), t.interfaces...))
+Base.:&(::Type{S}, ::Type{S}) where {S <: Intersection} = S
+Base.:&(::Type{S}, ::Type{S}) where {S <: ConcreteInterface} = S
+Base.:&(S::Type{<:ConcreteInterface}, T::Type{<:ConcreteInterface}) = simplify((S(), T()))
+Base.:&(s::Intersection, T::Type{<:ConcreteInterface}) = simplify((s.interfaces..., T()))
+Base.:&(S::Type{<:ConcreteInterface}, t::Intersection) = simplify((S(), t.interfaces...))
 Base.:&(s::Intersection, t::Intersection) = simplify((s.interfaces, t.interfaces...))
 
 

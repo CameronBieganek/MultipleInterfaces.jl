@@ -4,10 +4,10 @@
 function var"#ExtendableInterfaces#superinterfaces#" end
 
 # A more convenient name for internal usage.
-_superinterfaces(x::Interface) = var"#ExtendableInterfaces#superinterfaces#"(x)
+_superinterfaces(x::ConcreteInterface) = var"#ExtendableInterfaces#superinterfaces#"(x)
 
 # The exported version that dispatches on interface types rather than instances.
-function superinterfaces(I::Type{<:Interface})
+function superinterfaces(I::Type{<:ConcreteInterface})
     map(typeof, var"#ExtendableInterfaces#superinterfaces#"(I()))
 end
 
@@ -16,7 +16,7 @@ end
 function var"#ExtendableInterfaces#required_methods#" end
 
 # The exported version that dispatches on interface types rather than instances.
-function required_methods(I::Type{<:Interface})
+function required_methods(I::Type{<:ConcreteInterface})
     var"#ExtendableInterfaces#required_methods#"(I())
 end
 
@@ -51,7 +51,7 @@ function interface_helper(name, superinterfaces, methods_block)
         # Ditto for the declared methods of the interface.
         $(methods...)
 
-        struct $esc_name <: Interface end
+        struct $esc_name <: ConcreteInterface end
 
         import ExtendableInterfaces: var"#ExtendableInterfaces#superinterfaces#"
         import ExtendableInterfaces: var"#ExtendableInterfaces#required_methods#"
@@ -146,7 +146,7 @@ implements(T::Type) = map(typeof, _implements(T))
 function throw_type_macro_syntax_error()
     throw(ArgumentError(
         "Syntax error in `@type`. To declare that type `Foo` implements interfaces" *
-        "`A` and `B`, write `@type implements A, B`."
+        "`A` and `B`, write `@type Foo implements A, B`."
     ))
 end
 
@@ -154,9 +154,9 @@ end
 # This function is not part of the dispatch machinery, so it does not need to compile away.
 # This function returns all (possibly transitive) superinterfaces of
 # `interface`, including `interface`.
-function ancestors(interface::Interface)
+function ancestors(interface::ConcreteInterface)
     visited = ()
-    stack = Interface[interface]
+    stack = ConcreteInterface[interface]
 
     while !isempty(stack)
         interface = pop!(stack)

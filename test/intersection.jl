@@ -60,6 +60,10 @@ end
     @test E & F == F
     @test E & F & G == G
     @test E & F & G & H == G & H
+
+    @test A & B & B & A == A & B == B & A
+    @test B & B & A & A == A & B == B & A
+    @test C & A & B & B & A & C == A & B & C == C & B & A
 end
 
 end
