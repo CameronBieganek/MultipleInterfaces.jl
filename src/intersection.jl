@@ -37,3 +37,22 @@ function Base.show(io::IO, i::Intersection)
     end
     print(io, typeof(i.interfaces[end]))
 end
+
+
+_is_subinterface(sub::ConcreteInterface, super::Intersection) = false
+
+function _is_subinterface(sub::Intersection, super::ConcreteInterface)
+    any_t(x -> _is_subinterface(x, super), sub.interfaces)
+end
+
+function _is_subinterface(left::Intersection, right::Intersection)
+    left == right && return true
+    all_t(right.interfaces) do right_concrete
+        any_t(left_concrete -> _is_subinterface(left_concrete, right_concrete), left.interfaces)
+    end
+end
+
+
+is_subinterface(S::Type{<:ConcreteInterface}, t::Intersection) = _is_subinterface(S(), t)
+is_subinterface(s::Intersection, T::Type{<:ConcreteInterface}) = _is_subinterface(s, T())
+is_subinterface(s::Intersection, t::Intersection) = _is_subinterface(s, t)

@@ -1,6 +1,6 @@
 
 
-module IntersectionTests
+module IntersectionEqualityTests
 
 using Test
 using ExtendableInterfaces
@@ -30,7 +30,7 @@ end
 @interface G extends F
 
 
-@testset "interface intersections" begin
+@testset "interface intersections equality" begin
     @test A & A == A
     @test A & A & A == A
     @test E & E == E
@@ -64,6 +64,126 @@ end
     @test A & B & B & A == A & B == B & A
     @test B & B & A & A == A & B == B & A
     @test C & A & B & B & A & C == A & B & C == C & B & A
+end
+
+end
+
+
+
+module IntersectionSubinterfaceTests
+
+using Test
+using ExtendableInterfaces
+
+
+function a end
+function b end
+function c end
+function d end
+
+@interface A begin a end
+@interface B begin b end
+@interface C extends A, B begin c end
+@interface D extends C begin d end
+
+function k end
+function l end
+
+@interface K begin k end
+@interface L extends K begin l end
+
+function p end
+function q end
+
+@interface P begin p end
+@interface Q extends P begin q end
+
+function x end
+function y end
+
+@interface X begin x end
+@interface Y extends X begin y end
+
+
+@testset "interface intersections `is_subinterface`" begin
+
+    @test K & P ≼ K & P
+    @test K & P ≼ P & K
+    @test P & K ≼ K & P
+
+    @test K & P & X ≼ K & P & X
+    @test K & P & X ≼ P & K & X
+    @test K & P & X ≼ P & X & K
+    @test P & K & X ≼ K & P & X
+    @test K & P & X ≼ K & P & X
+    @test X & K & P ≼ K & P & X
+
+    @test K & P & X & P ≼ K & P & X
+    @test K & P & X ≼ K & P & X & K
+    @test P & K & X & X ≼ K & P & X
+    @test P & K & X ≼ K & P & X & P
+
+    @test A & K ≼ A
+    @test A & K ≼ K
+    @test A & K ⋠ P
+    @test A ⋠ A & K
+    @test K ⋠ A & K
+    @test P ⋠ A & K
+
+    @test A & K & P ≼ A
+    @test A & K & P ≼ K
+    @test A & K & P ≼ P
+    @test A & K & P ⋠ X
+    @test A ⋠ A & K & P
+    @test K ⋠ A & K & P
+    @test P ⋠ A & K & P
+    @test X ⋠ A & K & P
+
+    @test C & K ≼ A & K
+    @test D & K ≼ A & K
+    @test A & L ≼ A & K
+    @test C & L ≼ A & K
+    @test D & L ≼ A & K
+    @test A & K ⋠ C & K
+    @test A & K ⋠ D & K
+    @test A & K ⋠ A & L
+    @test A & K ⋠ C & L
+    @test A & K ⋠ D & L
+
+    @test K & P & X ≼ K & P
+    @test X & K & P ≼ P & K
+    @test K & P ⋠ K & P & X
+    @test P & K ⋠ X & K & P
+
+    @test L & P & X ≼ K & P
+    @test K & Q & X ≼ K & P
+    @test L & Q & X ≼ K & P
+    @test L & Q & Y ≼ K & P
+    @test L & Q & A ≼ K & P
+
+    @test K & P ⋠ L & P & X
+    @test K & P ⋠ K & Q & X
+    @test K & P ⋠ L & Q & X
+    @test K & P ⋠ L & Q & Y
+    @test K & P ⋠ L & Q & A
+
+    @test A & K & P & X ≼ K & P & X
+    @test B & K & P & X ≼ K & P & X
+    @test C & K & P & X ≼ K & P & X
+    @test A & L & P & X ≼ K & P & X
+    @test A & K & Q & X ≼ K & P & X
+    @test A & K & P & Y ≼ K & P & X
+
+    @test K & P & X ⋠ A & K & P & X
+    @test K & P & X ⋠ B & K & P & X
+    @test K & P & X ⋠ C & K & P & X
+    @test K & P & X ⋠ A & L & P & X
+    @test K & P & X ⋠ A & K & Q & X
+    @test K & P & X ⋠ A & K & P & Y
+
+    @test K & Q ⋠ L & P
+    @test L & P ⋠ K & Q
+
 end
 
 end

@@ -39,6 +39,17 @@ end
 
 @testset "utils" begin
 
+    @test all_t(x -> x in (A(), C()), ())
+    @test all_t(x -> x === D(), ())
+    @test all_t(x -> x in (A(), B(), C()), (A(), B(), C()))
+    @test all_t(x -> x in (A(), B(), C()), (B(), C()))
+    @test all_t(x -> x in (A(), B(), C()), (A(), B()))
+    @test all_t(x -> x in (A(), B(), C()), (A(), ))
+    @test !all_t(x -> x in (A(), B(), C()), (B(), D(), E()))
+    @test !all_t(x -> x in (A(), B()), (A(), B(), C()))
+    @test !all_t(x -> x in (A(), B()), (C(), E()))
+    @test !all_t(x -> x in (A(), B()), (E(), ))
+
     @test all_t(==, (), ())
     @test all_t(!=, (), ())
     @test all_t(==, (A(), ), (A(), ))

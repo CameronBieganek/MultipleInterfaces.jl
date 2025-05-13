@@ -106,6 +106,17 @@ function filter_t(f, t::Tuple)
 end
 
 
+all_t(f, ::Tuple{}) = true
+
+function all_t(f, t::Tuple)
+    if f(t[1])
+        all_t(f, tail(t))
+    else
+        false
+    end
+end
+
+
 # `f` is a binary function.
 all_t(f, ::Tuple{}, ::Tuple{}) = true
 

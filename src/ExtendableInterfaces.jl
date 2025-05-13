@@ -16,6 +16,10 @@ abstract type ConcreteInterface end
 
 # TODO: Update `superinterfaces` and `required_methods` so they work on interface intersections?
 
+# TODO:
+# - Update `@idispatch` to work with interface intersections.
+# - Make sure that method redefinition works properly.
+
 include("utils.jl")
 include("interface.jl")
 include("intersection.jl")
