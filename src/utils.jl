@@ -118,6 +118,17 @@ function all_t(f, s::Tuple, t::Tuple)
 end
 
 
+any_t(f, ::Tuple{}) = false
+
+function any_t(f, t::Tuple)
+    if !f(t[1])
+        any_t(f, tail(t))
+    else
+        true
+    end
+end
+
+
 unique_t(::Tuple{}) = ()
 
 function unique_t(t::Tuple)

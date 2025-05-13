@@ -4,7 +4,7 @@ module UtilsTests
 
 using Test
 using ExtendableInterfaces
-using ExtendableInterfaces: all_t, ancestors, delete, filter_t, foldl_t, in_t
+using ExtendableInterfaces: all_t, any_t, ancestors, delete, filter_t, foldl_t, in_t
 using ExtendableInterfaces: intersect_t, map_t, remove_superinterfaces, tail
 using ExtendableInterfaces: transpose_t, union_t, unique_t
 
@@ -47,6 +47,14 @@ end
     @test !all_t(==, (A(), B()), (A(), C()))
     @test all_t(==, (A(), B(), C()), (A(), B(), C()))
     @test !all_t(==, (A(), B(), C()), (A(), B(), D()))
+
+    @test !any_t(x -> x in (A(), C()), ())
+    @test !any_t(x -> x === D(), ())
+    @test any_t(x -> x in (A(), C()), (A(), B(), C(), D()))
+    @test !any_t(x -> x in (A(), C()), (B(), D(), E()))
+    @test any_t(x -> x in (A(), C()), (A(), D(), E()))
+    @test any_t(x -> x in (A(), C()), (C(), ))
+    @test !any_t(x -> x in (A(), C()), (E(), ))
 
     @test delete((), B()) == ()
     @test delete((A(), B(), C()), B()) == (A(), C())
