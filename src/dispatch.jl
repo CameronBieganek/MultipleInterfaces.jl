@@ -44,6 +44,7 @@ struct InterfaceArg end
 struct TypeArg end
 
 
+# TODO: Delete these.
 function update_interface_dispatches(::Tuple{}, interface_args_interfaces::Tuple)
     map(i -> (i, ), interface_args_interfaces)
 end
@@ -62,6 +63,22 @@ end
 
 sym_vec(n) = Vector{Symbol}(undef, n)
 throw_idispatch_syntax_error() = error("Syntax error in the `@idispatch` macro.")
+
+
+function is_AND_ex(ex)
+    ex isa Expr &&
+    ex.head == :call &&
+    ex.args[1] == :&
+end
+
+
+function _concrete_interfaces(ex)
+    ex isa Symbol && return ex
+    is_AND_ex(ex) || throw_idispatch_syntax_error()
+    vcat(_concrete_interfaces(ex.args[2]), _concrete_interfaces(ex.args[3]))
+end
+
+concrete_interfaces(ex) = esc.(_concrete_interfaces(ex))
 
 
 # TODO: Fix handling of first argument in `foo(::Int, a: A)`.
@@ -107,18 +124,24 @@ macro idispatch(fdef)
         elseif arg_ex.head == :call
             if (
                 arg_ex.args[1] == :(:) &&
-                arg_ex.args[2] isa Symbol &&
-                arg_ex.args[3] isa Symbol
+                arg_ex.args[2] isa Symbol
             )
                 type = :InterfaceArg
                 underscore_type = :_
                 name = normalized_arg = arg_ex.args[2]
-
                 push!(interface_arg_names, name)
 
-                interface = arg_ex.args[3]
-                push!(interface_signature, esc(interface))
-                push!(interface_objects, :($(esc(interface))()))
+                interface_ex = arg_ex.args[3]
+                if interface_ex isa Symbol
+                    push!(interface_signature, esc(interface_ex))
+                    push!(interface_objects, :($(esc(interface_ex))()))
+                elseif is_AND_ex(interface_ex)
+                    arg_signature = :(Intersection{Tuple{$(concrete_interfaces(interface_ex)...)}})
+                    push!(interface_signature, arg_signature)
+                    push!(interface_objects, :($(esc(interface_ex))))
+                else
+                    throw_idispatch_syntax_error()
+                end
             else
                 throw_idispatch_syntax_error()
             end
