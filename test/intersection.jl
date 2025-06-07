@@ -186,4 +186,53 @@ function y end
 
 end
 
+
+using ExtendableInterfaces: remove_superinterfaces
+
+@testset "interface intersections `remove_superinterfaces`" begin
+
+    @test issetequal(
+        remove_superinterfaces((A(), K & P)),
+        (A(), K & P)
+    )
+    @test issetequal(
+        remove_superinterfaces((A(), K & P, X())),
+        (A(), K & P, X())
+    )
+    @test issetequal(
+        remove_superinterfaces((A & K, P & X)),
+        (A & K, P & X)
+    )
+
+    @test remove_superinterfaces((K(), K & P)) == (K & P, )
+    @test remove_superinterfaces((K & P, K())) == (K & P, )
+    @test remove_superinterfaces((P(), K & P)) == (K & P, )
+    @test remove_superinterfaces((K & P, P())) == (K & P, )
+    @test remove_superinterfaces((K(), K & P & X)) == (K & P & X, )
+    @test remove_superinterfaces((K & P & X, K())) == (K & P & X, )
+
+    @test issetequal(
+        remove_superinterfaces((A(), K & P, K & P & X)),
+        (A(), K & P & X)
+    )
+    @test issetequal(
+        remove_superinterfaces((A(), K & P, K & Q)),
+        (A(), K & Q)
+    )
+    @test issetequal(
+        remove_superinterfaces((A(), K & P, L & P)),
+        (A(), L & P)
+    )
+    @test issetequal(
+        remove_superinterfaces((A(), K & P, L & Q)),
+        (A(), L & Q)
+    )
+    @test issetequal(
+        remove_superinterfaces((A(), K & P, L & Q & Y)),
+        (A(), L & Q & Y)
+    )
+    @test remove_superinterfaces((K & P, L & Q & Y)) == (L & Q & Y, )
+
+end
+
 end
