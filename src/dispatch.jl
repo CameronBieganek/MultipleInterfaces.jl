@@ -200,6 +200,14 @@ macro idispatch(fdef)
 end
 
 
+# `implementeds::Tuple{Vararg{ConcreteInterface}}`
+is_implemented(t::ConcreteInterface, implementeds) = in_t(t, implementeds)
+
+function is_implemented(x::Intersection, implementeds)
+    all_t(t -> in_t(t, implementeds), x.interfaces)
+end
+
+
 most_specific(xs::Tuple{Any}) = xs[1]
 
 Base.@assume_effects :foldable function most_specific(xs::Tuple)
@@ -217,7 +225,7 @@ Base.@assume_effects :foldable function dispatch(f, interface_args)
     argwise_implemented = map_t(_implements, interface_args)
 
     matching_signatures = filter_t(interface_signatures(f)) do signature
-        all_t(in_t, signature, argwise_implemented)
+        all_t(is_implemented, signature, argwise_implemented)
     end
 
     matching_signatures === () && return NoMatchingIDispatchMethod()

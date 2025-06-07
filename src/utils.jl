@@ -7,6 +7,9 @@
 # with reasonable confidence.
 
 
+# TODO: Delete functions that are no longer used.
+
+
 # This function assumes that `s` and `t` do not contain any duplicates.
 intersect_t(::Tuple{}, t::Tuple) = ()
 
