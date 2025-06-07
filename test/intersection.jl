@@ -74,6 +74,7 @@ module IntersectionSubinterfaceTests
 
 using Test
 using ExtendableInterfaces
+using ExtendableInterfaces: remove_superinterfaces, most_specific, SingleArgumentAmbiguity
 
 
 function a end
@@ -184,10 +185,15 @@ function y end
     @test K & Q ⋠ L & P
     @test L & P ⋠ K & Q
 
+    @test C ≼ A & B
+    @test D ≼ A & B
+    @test C ≼ A & C
+    @test C ≼ B & C
+    @test D ≼ A & C
+    @test D ≼ B & C
+
 end
 
-
-using ExtendableInterfaces: remove_superinterfaces
 
 @testset "interface intersections `remove_superinterfaces`" begin
 
@@ -234,5 +240,36 @@ using ExtendableInterfaces: remove_superinterfaces
     @test remove_superinterfaces((K & P, L & Q & Y)) == (L & Q & Y, )
 
 end
+
+
+@testset "interface intersections `most_specific`" begin
+
+    @test most_specific((A & B, C())) == C()
+    @test most_specific((A & B, D())) == D()
+
+    @test most_specific((K(), P(), K & P)) == K & P
+    @test most_specific((K(), P(), K & P, K & P & X)) == K & P & X
+
+    @test most_specific((K & P, K & Q)) == K & Q
+    @test most_specific((K(), K & P, K & Q)) == K & Q
+    @test most_specific((K(), P(), K & P, K & Q)) == K & Q
+    @test most_specific((K(), P(), K & P, K & Q, K & Q & X)) == K & Q & X
+
+    @test most_specific((K & P, L & P)) == L & P
+    @test most_specific((K(), K & P, L & P)) == L & P
+    @test most_specific((K(), P(), K & P, L & P)) == L & P
+    @test most_specific((K(), P(), K & P, L & P, L & P & X)) == L & P & X
+
+    @test most_specific((K & P, L & Q)) == L & Q
+    @test most_specific((K(), K & P, L & Q)) == L & Q
+    @test most_specific((K(), P(), K & P, L & Q)) == L & Q
+    @test most_specific((K(), P(), K & P, L & Q & X)) == L & Q & X
+
+    @test most_specific((A(), K(), P(), K & P, K & P & X)) == SingleArgumentAmbiguity()
+    @test most_specific((C(), K & P)) == SingleArgumentAmbiguity()
+    @test most_specific((K & Q, L & P)) == SingleArgumentAmbiguity()
+
+end
+
 
 end

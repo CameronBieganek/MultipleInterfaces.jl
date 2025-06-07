@@ -39,7 +39,9 @@ function Base.show(io::IO, i::Intersection)
 end
 
 
-_is_subinterface(sub::ConcreteInterface, super::Intersection) = false
+function _is_subinterface(sub::ConcreteInterface, super::Intersection)
+    all_t(x -> _is_subinterface(sub, x), super.interfaces)
+end
 
 function _is_subinterface(sub::Intersection, super::ConcreteInterface)
     any_t(x -> _is_subinterface(x, super), sub.interfaces)
