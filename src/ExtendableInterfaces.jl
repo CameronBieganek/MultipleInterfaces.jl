@@ -20,6 +20,10 @@ abstract type ConcreteInterface end
 # - Update `@idispatch` to work with interface intersections.
 # - Make sure that method redefinition works properly.
 
+# TODO: Allow definitions like this?
+# @idispatch foo(x::Int, y) = 1
+# ...that probaby won't work...
+
 include("utils.jl")
 include("interface.jl")
 include("intersection.jl")
