@@ -4,8 +4,9 @@ module UtilsTests
 
 using Test
 using ExtendableInterfaces
-using ExtendableInterfaces: all_t, ancestors, delete, filter_t, foldl_t, in_t
-using ExtendableInterfaces: intersect_t, map_t, tail, transpose_t, union_t, unique_t
+using ExtendableInterfaces: all_t, any_t, ancestors, delete, filter_t, foldl_t, in_t
+using ExtendableInterfaces: intersect_t, map_t, remove_superinterfaces, tail
+using ExtendableInterfaces: transpose_t, union_t, unique_t
 
 
 function a end
@@ -38,6 +39,17 @@ end
 
 @testset "utils" begin
 
+    @test all_t(x -> x in (A(), C()), ())
+    @test all_t(x -> x === D(), ())
+    @test all_t(x -> x in (A(), B(), C()), (A(), B(), C()))
+    @test all_t(x -> x in (A(), B(), C()), (B(), C()))
+    @test all_t(x -> x in (A(), B(), C()), (A(), B()))
+    @test all_t(x -> x in (A(), B(), C()), (A(), ))
+    @test !all_t(x -> x in (A(), B(), C()), (B(), D(), E()))
+    @test !all_t(x -> x in (A(), B()), (A(), B(), C()))
+    @test !all_t(x -> x in (A(), B()), (C(), E()))
+    @test !all_t(x -> x in (A(), B()), (E(), ))
+
     @test all_t(==, (), ())
     @test all_t(!=, (), ())
     @test all_t(==, (A(), ), (A(), ))
@@ -46,6 +58,14 @@ end
     @test !all_t(==, (A(), B()), (A(), C()))
     @test all_t(==, (A(), B(), C()), (A(), B(), C()))
     @test !all_t(==, (A(), B(), C()), (A(), B(), D()))
+
+    @test !any_t(x -> x in (A(), C()), ())
+    @test !any_t(x -> x === D(), ())
+    @test any_t(x -> x in (A(), C()), (A(), B(), C(), D()))
+    @test !any_t(x -> x in (A(), C()), (B(), D(), E()))
+    @test any_t(x -> x in (A(), C()), (A(), D(), E()))
+    @test any_t(x -> x in (A(), C()), (C(), ))
+    @test !any_t(x -> x in (A(), C()), (E(), ))
 
     @test delete((), B()) == ()
     @test delete((A(), B(), C()), B()) == (A(), C())
@@ -189,6 +209,76 @@ end
     )
     @test unique_t(()) == ()
 
+end
+
+
+@testset "is_subinterface" begin
+    @test is_subinterface(C, A)
+    @test is_subinterface(C, B)
+    @test is_subinterface(D, B)
+    @test is_subinterface(E, C)
+    @test is_subinterface(E, D)
+    @test is_subinterface(F, E)
+    @test is_subinterface(G, F)
+    @test is_subinterface(G, A)
+    @test is_subinterface(G, B)
+    @test is_subinterface(F, D)
+    @test is_subinterface(E, A)
+    @test is_subinterface(E, B)
+    @test !is_subinterface(A, B)
+    @test !is_subinterface(B, A)
+    @test !is_subinterface(A, C)
+    @test !is_subinterface(B, C)
+    @test !is_subinterface(D, A)
+    @test !is_subinterface(E, F)
+    @test !is_subinterface(F, G)
+    @test !is_subinterface(E, G)
+    @test !is_subinterface(A, H)
+    @test !is_subinterface(D, H)
+    @test !is_subinterface(H, B)
+    @test !is_subinterface(H, E)
+
+    @test C ≼ A
+    @test C ≼ B
+    @test D ≼ B
+
+    @test A ⋠ B
+    @test B ⋠ A
+    @test A ⋠ C
+end
+
+
+@testset "remove_superinterfaces" begin
+    @test remove_superinterfaces((A(), B(), C(), D(), E(), F(), G())) == (G(), )
+    @test remove_superinterfaces((G(), F(), E(), D(), C(), B(), A())) == (G(), )
+    @test issetequal(
+        remove_superinterfaces((A(), B(), C(), D(), E(), F(), G(), H())),
+        (G(), H())
+    )
+    @test issetequal(
+        remove_superinterfaces((A(), B(), H())),
+        (A(), B(), H())
+    )
+    @test issetequal(
+        remove_superinterfaces((A(), B(), C(), D(), E(), F(), G(), H())),
+        (G(), H())
+    )
+    @test issetequal(
+        remove_superinterfaces((A(), B(), C(), D())),
+        (C(), D())
+    )
+    @test (
+        remove_superinterfaces((A(), B(), C())) ==
+        remove_superinterfaces((B(), A(), C())) ==
+        remove_superinterfaces((C(), B(), A())) ==
+        (C(), )
+    )
+    @test remove_superinterfaces((A(), F(), C(), D())) == (F(), )
+    @test (
+        remove_superinterfaces((E(), G())) ==
+        remove_superinterfaces((G(), E())) ==
+        (G(), )
+    )
 end
 
 end

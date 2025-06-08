@@ -1,7 +1,24 @@
 
 
-function required_methods end
-function superinterfaces end
+# This function gets overloaded by the `@interface` macro in the user scope.
+function var"#ExtendableInterfaces#superinterfaces#" end
+
+# A more convenient name for internal usage.
+_superinterfaces(x::ConcreteInterface) = var"#ExtendableInterfaces#superinterfaces#"(x)
+
+# The exported version that dispatches on interface types rather than instances.
+function superinterfaces(I::Type{<:ConcreteInterface})
+    map(typeof, var"#ExtendableInterfaces#superinterfaces#"(I()))
+end
+
+
+# This function gets overloaded by the `@interface` macro in the user scope.
+function var"#ExtendableInterfaces#required_methods#" end
+
+# The exported version that dispatches on interface types rather than instances.
+function required_methods(I::Type{<:ConcreteInterface})
+    var"#ExtendableInterfaces#required_methods#"(I())
+end
 
 
 function interface_helper(name, superinterfaces, methods_block)
@@ -18,30 +35,37 @@ function interface_helper(name, superinterfaces, methods_block)
         end
 
         methods = filter(arg -> arg isa Symbol, methods_block.args)
+        methods = map(m -> esc(m), methods)
     end
 
-    superinterface_objs = Expr(:tuple, map(s -> :($s()), superinterfaces.args)...)
+    esc_superinterfaces = map(s -> esc(s), superinterfaces.args)
+    esc_superinterface_objs = Expr(:tuple, map(s -> :($s()), esc_superinterfaces)...)
 
-    name_str = String(name)
+    esc_name = esc(name)
 
-    ex = quote
+    quote
         # This will throw an `UndefVarErr` if any of the declared superinterfaces
         # are not yet defined.
-        $(superinterfaces.args...)
+        $(esc_superinterfaces...)
 
         # Ditto for the declared methods of the interface.
         $(methods...)
 
-        struct $name <: Interface end
+        struct $esc_name <: ConcreteInterface end
 
-        ExtendableInterfaces.superinterfaces(::$name) = $superinterface_objs
-        ExtendableInterfaces.required_methods(::$name) = ($(methods...),)
+        import ExtendableInterfaces: var"#ExtendableInterfaces#superinterfaces#"
+        import ExtendableInterfaces: var"#ExtendableInterfaces#required_methods#"
 
-        Base.show(io::IO, ::$name) = print(io, $name_str, "()")
-        Base.show(io::IO, ::MIME"text/plain", ::$name) = print(io, "Interface: ", $name_str)
+        function $(esc(Symbol("#ExtendableInterfaces#superinterfaces#")))(::$esc_name)
+            $esc_superinterface_objs
+        end
+
+        function $(esc(Symbol("#ExtendableInterfaces#required_methods#")))(::$esc_name)
+            ($(methods...),)
+        end
+
+        nothing
     end
-
-    esc(ex)
 end
 
 
@@ -54,21 +78,14 @@ function check_methods_block_head(methods_block)
 end
 
 
-# TODO: Get rid of this. Eq <: PartialEq is a good example of a case where you want
-# to extend a single interface without adding any methods.
+# TODO: Enforce that every interface contain at least one required method.
+# I.e., not just root interfaces.
 function throw_at_least_one_method_error()
     throw(ArgumentError(
         "An interface that does not extend any other interface must require " *
         "at least one method."
     ))
 end
-
-
-# TODO:
-# - Add an `Intersection` type and overload `+(a::Interface, b::Interface)` so that
-#   it is equivalent to `Intersection{a, b}`.
-# - Require any interface that extends other interfaces to include at least one required method.
-#     - The first bullet point makes it easy to add an alias for an intersection type.
 
 
 # We could just leave this undefined and thus get a method error, but macro
@@ -115,14 +132,21 @@ macro interface(
 end
 
 
-implements(::Type{T}) where {T} = ()
-implements(::T) where {T} = implements(T)
+# This function gets overloaded by the `@type` macro in the user scope.
+var"#ExtendableInterfaces#implements#"(::Type) = ()
+
+# A more convenient name for internal usage.
+_implements(T::Type) = var"#ExtendableInterfaces#implements#"(T)
+_implements(::T) where {T} = _implements(T)
+
+# The exported version. Returns interface types rather than instances.
+implements(T::Type) = map(typeof, _implements(T))
 
 
 function throw_type_macro_syntax_error()
     throw(ArgumentError(
         "Syntax error in `@type`. To declare that type `Foo` implements interfaces" *
-        "`A` and `B`, write `@type implements A, B`."
+        "`A` and `B`, write `@type Foo implements A, B`."
     ))
 end
 
@@ -130,15 +154,15 @@ end
 # This function is not part of the dispatch machinery, so it does not need to compile away.
 # This function returns all (possibly transitive) superinterfaces of
 # `interface`, including `interface`.
-function ancestors(interface::Interface)
+function ancestors(interface::ConcreteInterface)
     visited = ()
-    stack = Interface[interface]
+    stack = ConcreteInterface[interface]
 
     while !isempty(stack)
         interface = pop!(stack)
         if !in_t(interface, visited)
             visited = (visited..., interface)
-            for superinterface in superinterfaces(interface)
+            for superinterface in _superinterfaces(interface)
                 push!(stack, superinterface)
             end
         end
@@ -149,12 +173,15 @@ end
 
 
 function update_implemented(::Type{T}, new_impls::Tuple) where {T}
-    foldl(new_impls; init=implements(T)) do implemented, new_impl
+    foldl(new_impls; init=_implements(T)) do implemented, new_impl
         union_t(implemented, ancestors(new_impl))
     end
 end
 
 
+# TODO: Handle parametric types and possibly abstract types. Or maybe error
+# if `isabstracttype(T)` is true. (That's only true if it is an abstract type
+# declared with `abstract type`.)
 macro type(type, implements::Symbol, interfaces_ex)
     type = esc(type)
 
@@ -170,9 +197,18 @@ macro type(type, implements::Symbol, interfaces_ex)
     interfaces = map(sym -> :($(esc(sym))()), interface_syms)
 
     quote
+        import ExtendableInterfaces: var"#ExtendableInterfaces#implements#"
+
         let
+            global var"#ExtendableInterfaces#implements#"
+
             implemented = update_implemented($type, ($(interfaces...), ))
-            ExtendableInterfaces.implements(::Type{$type}) = implemented
+
+            function $(esc(Symbol("#ExtendableInterfaces#implements#")))(::Type{$type})
+                implemented
+            end
         end
+
+        nothing
     end
 end

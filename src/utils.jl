@@ -7,6 +7,9 @@
 # with reasonable confidence.
 
 
+# TODO: Delete functions that are no longer used.
+
+
 # This function assumes that `s` and `t` do not contain any duplicates.
 intersect_t(::Tuple{}, t::Tuple) = ()
 
@@ -47,6 +50,17 @@ function tail(x::Tuple{Any, Vararg{Any, N}}) where {N}
         i -> x[i + 1]
     end
     ntuple(f, Val(N))::NTuple{N, Any}
+end
+
+
+# Get all elements of a tuple except for the last one.
+front(::Tuple{Any}) = ()
+
+function front(x::Tuple{Vararg{Any, N}}) where {N}
+    f = let x = x
+        i -> x[i]
+    end
+    ntuple(f, Val(N - 1))::NTuple{N - 1, Any}
 end
 
 
@@ -95,6 +109,17 @@ function filter_t(f, t::Tuple)
 end
 
 
+all_t(f, ::Tuple{}) = true
+
+function all_t(f, t::Tuple)
+    if f(t[1])
+        all_t(f, tail(t))
+    else
+        false
+    end
+end
+
+
 # `f` is a binary function.
 all_t(f, ::Tuple{}, ::Tuple{}) = true
 
@@ -103,6 +128,17 @@ function all_t(f, s::Tuple, t::Tuple)
         all_t(f, tail(s), tail(t))
     else
         false
+    end
+end
+
+
+any_t(f, ::Tuple{}) = false
+
+function any_t(f, t::Tuple)
+    if !f(t[1])
+        any_t(f, tail(t))
+    else
+        true
     end
 end
 
@@ -136,4 +172,83 @@ function transpose_t(ts::Tuple)
             (acc_arg..., t_arg)
         end
     end
+end
+
+
+function is_subinterface(S::Type{<:ConcreteInterface}, T::Type{<:ConcreteInterface})
+    _is_subinterface(S(), T())
+end
+
+const ≼ = is_subinterface
+const ⋠ = !is_subinterface
+
+
+_is_subinterface(::T, ::T) where {T <: ConcreteInterface} = true
+
+function _is_subinterface(sub::ConcreteInterface, super::ConcreteInterface)
+    visit_superinterfaces(_superinterfaces(sub), (), super) === Found()
+end
+
+
+struct Found end
+
+
+function visit_superinterfaces(superinterfaces::Tuple, visited, target)
+    out = visit_interface(superinterfaces[1], visited, target)
+
+    if out === Found()
+        Found()
+    else
+        visit_superinterfaces(tail(superinterfaces), out[1], out[2])
+    end
+end
+
+visit_superinterfaces(::Tuple{}, visited, target) = visited, target
+
+
+function visit_interface(interface, visited, target)
+    if in_t(interface, visited)
+        return visited, target
+    end
+
+    if interface === target
+        return Found()
+    end
+
+    out = visit_superinterfaces(_superinterfaces(interface), visited, target)
+
+    if out === Found()
+        Found()
+    else
+        (out[1]..., interface), out[2]
+    end
+end
+
+
+function remove_superinterfaces(interfaces)
+    interfaces |> remove_superinterfaces_l |> remove_superinterfaces_r
+end
+
+
+remove_superinterfaces_l(xs::Tuple{Interface}) = xs
+remove_superinterfaces_l(xs::Tuple) = _remove_superinterfaces_l((), xs)
+_remove_superinterfaces_l(visited, ::Tuple{}) = visited
+
+function _remove_superinterfaces_l(visited, not_visited::Tuple)
+    x = not_visited[1]
+    rest = tail(not_visited)
+    non_superinterfaces = filter_t(y -> !_is_subinterface(x, y), rest)
+    _remove_superinterfaces_l((visited..., x), non_superinterfaces)
+end
+
+
+remove_superinterfaces_r(xs::Tuple{Interface}) = xs
+remove_superinterfaces_r(xs::Tuple) = _remove_superinterfaces_r((), xs)
+_remove_superinterfaces_r(visited, ::Tuple{}) = visited
+
+function _remove_superinterfaces_r(visited, not_visited::Tuple)
+    x = not_visited[end]
+    rest = front(not_visited)
+    non_superinterfaces = filter_t(y -> !_is_subinterface(x, y), rest)
+    _remove_superinterfaces_r((x, visited...), non_superinterfaces)
 end

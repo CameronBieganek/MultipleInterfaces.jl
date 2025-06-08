@@ -17,22 +17,26 @@ function Base.showerror(io::IO, ::NoMatchingIDispatchMethodError)
 end
 
 function Base.showerror(io::IO, ::SingleArgumentAmbiguityError)
-    print(io, "There is a single argument dispatch ambiguity.")
+    print(io, "There is a single argument i-dispatch ambiguity.")
 end
 
 function Base.showerror(io::IO, ::MultipleArgumentAmbiguityError)
-    print(io, "There is a multiple argument dispatch ambiguity.")
+    print(io, "There is a multiple argument i-dispatch ambiguity.")
 end
+
+
+# TODO: Make `signatures` and `interface_signatures` hidden.
+# TODO: Add unit tests to make sure everything works when `ExtendableInterfaces` is
+# not in scope. I.e., when the user does this:
+# `using ExtendableInterfaces: @interface, @type, @idispatch`.
 
 
 signatures(f) = Tuple[]
 is_signature_defined(f, signature) = (signature in signatures(f))
 
 
-# `interface_args_dispatches` returns a separate tuple for each argument, whereas
-# `interface_signatures` returns a tuple of signature tuples, where each signature
-# tuple indicates the interfaces that are dispatched on for one i-dispatch method.
-interface_args_dispatches(f) = ()
+# Return a tuple of signature tuples, where each signature tuple indicates the
+# interfaces that are dispatched on for one i-dispatch method.
 interface_signatures(f) = ()
 
 
@@ -40,6 +44,7 @@ struct InterfaceArg end
 struct TypeArg end
 
 
+# TODO: Delete these.
 function update_interface_dispatches(::Tuple{}, interface_args_interfaces::Tuple)
     map(i -> (i, ), interface_args_interfaces)
 end
@@ -58,6 +63,22 @@ end
 
 sym_vec(n) = Vector{Symbol}(undef, n)
 throw_idispatch_syntax_error() = error("Syntax error in the `@idispatch` macro.")
+
+
+function is_AND_ex(ex)
+    ex isa Expr &&
+    ex.head == :call &&
+    ex.args[1] == :&
+end
+
+
+function _concrete_interfaces(ex)
+    ex isa Symbol && return ex
+    is_AND_ex(ex) || throw_idispatch_syntax_error()
+    vcat(_concrete_interfaces(ex.args[2]), _concrete_interfaces(ex.args[3]))
+end
+
+concrete_interfaces(ex) = esc.(_concrete_interfaces(ex))
 
 
 # TODO: Fix handling of first argument in `foo(::Int, a: A)`.
@@ -103,18 +124,24 @@ macro idispatch(fdef)
         elseif arg_ex.head == :call
             if (
                 arg_ex.args[1] == :(:) &&
-                arg_ex.args[2] isa Symbol &&
-                arg_ex.args[3] isa Symbol
+                arg_ex.args[2] isa Symbol
             )
                 type = :InterfaceArg
                 underscore_type = :_
                 name = normalized_arg = arg_ex.args[2]
-
                 push!(interface_arg_names, name)
 
-                interface = arg_ex.args[3]
-                push!(interface_signature, esc(interface))
-                push!(interface_objects, :($(esc(interface))()))
+                interface_ex = arg_ex.args[3]
+                if interface_ex isa Symbol
+                    push!(interface_signature, esc(interface_ex))
+                    push!(interface_objects, :($(esc(interface_ex))()))
+                elseif is_AND_ex(interface_ex)
+                    arg_signature = :(Intersection{Tuple{$(concrete_interfaces(interface_ex)...)}})
+                    push!(interface_signature, arg_signature)
+                    push!(interface_objects, :($(esc(interface_ex))))
+                else
+                    throw_idispatch_syntax_error()
+                end
             else
                 throw_idispatch_syntax_error()
             end
@@ -161,17 +188,6 @@ macro idispatch(fdef)
         end
         $_f_name(::Tuple{$(interface_signature...)}, $(arg_names...)) = $(body.args...)
 
-        # TODO: It looks like I might not be using this in dispatch anymore, so
-        # it can probably be deleted.
-        let
-            dispatches = ExtendableInterfaces.interface_args_dispatches($_f_name)
-            updated_dispatches = update_interface_dispatches(
-                dispatches,
-                ($(interface_objects...), )
-            )
-            ExtendableInterfaces.interface_args_dispatches(::typeof($_f_name)) = updated_dispatches
-        end
-
         let
             signatures_ = ExtendableInterfaces.interface_signatures($_f_name)
             updated_signatures = (signatures_..., ($(interface_objects...), ))
@@ -184,58 +200,32 @@ macro idispatch(fdef)
 end
 
 
-function visit_interface(interface, visited::Tuple, targets::Tuple)
-    if in_t(interface, visited)
-        return visited, targets
-    end
+# `implementeds::Tuple{Vararg{ConcreteInterface}}`
+is_implemented(t::ConcreteInterface, implementeds) = in_t(t, implementeds)
 
-    # If `interface` is not in `targets`, then `delete` just returns `targets`.
-    targets2 = delete(targets, interface)
-    targets2 === () && return nothing
-
-    out = visit_superinterfaces(superinterfaces(interface), visited, targets2)
-    out === nothing && return nothing
-
-    (out[1]..., interface), out[2]
-end
-
-function visit_superinterfaces(superinterfaces::Tuple, visited::Tuple, targets::Tuple)
-    out = visit_interface(superinterfaces[1], visited, targets)
-    out === nothing && return nothing
-    visit_superinterfaces(tail(superinterfaces), out[1], out[2])
-end
-
-visit_superinterfaces(::Tuple{}, visited::Tuple, targets::Tuple) = visited, targets
-
-
-function is_subinterface_all(interface, targets::Tuple)
-    visit_superinterfaces(superinterfaces(interface), (), targets) === nothing
+function is_implemented(x::Intersection, implementeds)
+    all_t(t -> in_t(t, implementeds), x.interfaces)
 end
 
 
 most_specific(xs::Tuple{Any}) = xs[1]
-most_specific(xs::Tuple) = _most_specific((), xs)
 
-# TODO: Can I simplify this recursion too?
-# Maybe use `any_t` (which I haven't written yet).
-Base.@assume_effects :foldable function _most_specific(left::Tuple, right::Tuple)
-    x = right[1]
-    rest = tail(right)
-    if is_subinterface_all(x, (left..., rest...))
-        x
+Base.@assume_effects :foldable function most_specific(xs::Tuple)
+    xs2 = remove_superinterfaces(xs)
+
+    if length(xs2) == 1
+        xs2[1]
     else
-        _most_specific((left..., x), rest)
+        SingleArgumentAmbiguity()
     end
 end
 
-_most_specific(::Tuple, ::Tuple{}) = SingleArgumentAmbiguity()
-
 
 Base.@assume_effects :foldable function dispatch(f, interface_args)
-    argwise_implemented = map_t(implements, interface_args)
+    argwise_implemented = map_t(_implements, interface_args)
 
     matching_signatures = filter_t(interface_signatures(f)) do signature
-        all_t(in_t, signature, argwise_implemented)
+        all_t(is_implemented, signature, argwise_implemented)
     end
 
     matching_signatures === () && return NoMatchingIDispatchMethod()

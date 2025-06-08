@@ -5,8 +5,7 @@
 module IDispatchMacroTests
 
 using ExtendableInterfaces
-using ExtendableInterfaces: signatures, interface_args_dispatches
-using ExtendableInterfaces: interface_signatures, InterfaceArg
+using ExtendableInterfaces: signatures, interface_signatures, InterfaceArg
 using Test
 
 
@@ -42,9 +41,6 @@ end
     @test signatures(foo) == [
         (Int, InterfaceArg, String, InterfaceArg)
     ]
-    idispatches = interface_args_dispatches(var"idispatch#foo(Int,_,String,_)")
-    @test issetequal(idispatches[1], (A(), ))
-    @test issetequal(idispatches[2], (B(), ))
     @test interface_signatures(var"idispatch#foo(Int,_,String,_)") == ((A(), B()), )
 
 end
@@ -58,9 +54,6 @@ end
     @test signatures(foo) == [
         (Int, InterfaceArg, String, InterfaceArg)
     ]
-    idispatches = interface_args_dispatches(var"idispatch#foo(Int,_,String,_)")
-    @test issetequal(idispatches[1], (A(), ))
-    @test issetequal(idispatches[2], (B(), C()))
     @test issetequal(
         interface_signatures(var"idispatch#foo(Int,_,String,_)"),
         (
@@ -80,9 +73,6 @@ end
     @test signatures(foo) == [
         (Int, InterfaceArg, String, InterfaceArg)
     ]
-    idispatches = interface_args_dispatches(var"idispatch#foo(Int,_,String,_)")
-    @test issetequal(idispatches[1], (A(), F()))
-    @test issetequal(idispatches[2], (B(), C(), H()))
     @test issetequal(
         interface_signatures(var"idispatch#foo(Int,_,String,_)"),
         (
@@ -104,12 +94,6 @@ end
         (Int, InterfaceArg, String, InterfaceArg),
         (Int, InterfaceArg, Int, InterfaceArg)
     ])
-    idispatches1 = interface_args_dispatches(var"idispatch#foo(Int,_,String,_)")
-    @test issetequal(idispatches1[1], (A(), F()))
-    @test issetequal(idispatches1[2], (B(), C(), H()))
-    idispatches2 = interface_args_dispatches(var"idispatch#foo(Int,_,Int,_)")
-    @test issetequal(idispatches2[1], (B(), ))
-    @test issetequal(idispatches2[2], (D(), ))
     @test interface_signatures(var"idispatch#foo(Int,_,Int,_)") == ((B(), D()), )
 
 end
@@ -124,12 +108,6 @@ end
         (Int, InterfaceArg, String, InterfaceArg),
         (Int, InterfaceArg, Int, InterfaceArg)
     ])
-    idispatches1 = interface_args_dispatches(var"idispatch#foo(Int,_,String,_)")
-    @test issetequal(idispatches1[1], (A(), F()))
-    @test issetequal(idispatches1[2], (B(), C(), H()))
-    idispatches2 = interface_args_dispatches(var"idispatch#foo(Int,_,Int,_)")
-    @test issetequal(idispatches2[1], (B(), C()))
-    @test issetequal(idispatches2[2], (D(), F()))
     @test issetequal(
         interface_signatures(var"idispatch#foo(Int,_,Int,_)"),
         (
@@ -151,16 +129,7 @@ end
         (Int, InterfaceArg, Int, InterfaceArg),
         (Int, InterfaceArg, Int)
     ])
-    idispatches1 = interface_args_dispatches(var"idispatch#foo(Int,_,String,_)")
-    @test issetequal(idispatches1[1], (A(), F()))
-    @test issetequal(idispatches1[2], (B(), C(), H()))
-    idispatches2 = interface_args_dispatches(var"idispatch#foo(Int,_,Int,_)")
-    @test issetequal(idispatches2[1], (B(), C()))
-    @test issetequal(idispatches2[2], (D(), F()))
-    idispatches3 = interface_args_dispatches(var"idispatch#foo(Int,_,Int)")
-    @test issetequal(idispatches3[1], (D(), ))
     @test interface_signatures(var"idispatch#foo(Int,_,Int)") == ((D(), ), )
-
 
     # Make sure the first two interface signatures haven't been accidentally modified.
     @test issetequal(
@@ -191,7 +160,7 @@ module SingleDispatchTests
 
 using Test
 using ExtendableInterfaces
-using ExtendableInterfaces: dispatch, is_subinterface_all, most_specific, SingleArgumentAmbiguity
+using ExtendableInterfaces: dispatch, most_specific, SingleArgumentAmbiguity
 
 
 function a end
@@ -218,14 +187,7 @@ end
 @interface G extends F
 
 
-@testset "dispatch helpers" begin
-
-    @test is_subinterface_all(E(), (B(), A()))
-    @test !is_subinterface_all(E(), (B(), A(), F()))
-
-    @test is_subinterface_all(C(), (A(), ))
-    @test !is_subinterface_all(A(), (C(), ))
-
+@testset "most_specific" begin
     @test most_specific((B(), A(), E())) == E()
     @test most_specific((B(), A(), E(), F())) == F()
     @test most_specific((B(), F(), A(), E())) == F()
@@ -233,7 +195,6 @@ end
     @test most_specific((C(), B(), D())) == SingleArgumentAmbiguity()
     @test most_specific((A(), H())) == SingleArgumentAmbiguity()
     @test most_specific((A(), C(), H())) == SingleArgumentAmbiguity()
-
 end
 
 
