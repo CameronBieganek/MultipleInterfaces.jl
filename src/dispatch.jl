@@ -44,23 +44,6 @@ struct InterfaceArg end
 struct TypeArg end
 
 
-# TODO: Delete these.
-function update_interface_dispatches(::Tuple{}, interface_args_interfaces::Tuple)
-    map(i -> (i, ), interface_args_interfaces)
-end
-
-
-function update_interface_dispatches(dispatches::Tuple, interface_args_interfaces::Tuple)
-    map(dispatches, interface_args_interfaces) do arg_dispaches, interface
-        if in_t(interface, arg_dispaches)
-            arg_dispaches
-        else
-            (arg_dispaches..., interface)
-        end
-    end
-end
-
-
 sym_vec(n) = Vector{Symbol}(undef, n)
 throw_idispatch_syntax_error() = error("Syntax error in the `@idispatch` macro.")
 
