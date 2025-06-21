@@ -205,23 +205,22 @@ end
 
 
 Base.@assume_effects :foldable function dispatch(f, interface_args)
-    argwise_implemented = map_t(_implements, interface_args)
+    arg_implementeds = map_t(_implements, interface_args)
 
     matching_signatures = filter_t(interface_signatures(f)) do signature
-        all_t(is_implemented, signature, argwise_implemented)
+        all_t(is_implemented, signature, arg_implementeds)
     end
 
     matching_signatures === () && return NoMatchingIDispatchMethod()
 
-    argwise_most_specific = map_t(transpose_t(matching_signatures)) do dispatches
-        most_specific(unique_t(dispatches))
-    end
+    arg_dispatches = transpose_t(matching_signatures)
+    arg_most_specific = map_t(most_specific, arg_dispatches)
 
     # TODO: Return more information for ambiguities so we can have more useful error messages.
-    if in_t(SingleArgumentAmbiguity(), argwise_most_specific)
+    if in_t(SingleArgumentAmbiguity(), arg_most_specific)
         SingleArgumentAmbiguity()
-    elseif in_t(argwise_most_specific, matching_signatures)
-        argwise_most_specific
+    elseif in_t(arg_most_specific, matching_signatures)
+        arg_most_specific
     else
         MultipleArgumentAmbiguity()
     end
