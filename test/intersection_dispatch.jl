@@ -1,6 +1,6 @@
 
 
-module IntersectionSubinterfaceTests
+module IntersectionDispatchTests
 
 using Test
 using ExtendableInterfaces
@@ -233,5 +233,43 @@ struct Plane end
 @testset "interface intersection dispatch `f`" begin
     @test_throws SingleArgumentAmbiguityError f(Plane())
 end
+
+end
+
+
+
+
+module MoreIntersectionDispatchTests
+
+using Test
+using ExtendableInterfaces
+
+function a end
+function b end
+function c end
+function d end
+
+@interface A begin a end
+@interface B begin b end
+@interface C begin c end
+@interface D extends C begin d end
+
+struct Ant end
+struct Bear end
+struct Cat end
+struct Dog end
+struct Mouse end
+
+@type Ant implements A
+@type Bear implements B
+@type Cat implements C
+@type Dog implements D
+@type Mouse implements A, B
+
+@idispatch foo(x: A & B, y: C) = 1
+@idispatch foo(x: B & A, y: D) = 2
+
+@test foo(Mouse(), Cat()) == 1
+@test foo(Mouse(), Dog()) == 2
 
 end
