@@ -204,6 +204,7 @@ Base.@assume_effects :foldable function most_specific(xs::Tuple)
 end
 
 
+# TODO: Return more information for ambiguities so we can have more useful error messages.
 Base.@assume_effects :foldable function dispatch(f, interface_args)
     arg_implementeds = map_t(_implements, interface_args)
 
@@ -216,12 +217,10 @@ Base.@assume_effects :foldable function dispatch(f, interface_args)
     arg_dispatches = transpose_t(matching_signatures)
     arg_most_specific = map_t(most_specific, arg_dispatches)
 
-    # TODO: Return more information for ambiguities so we can have more useful error messages.
     if in_t(SingleArgumentAmbiguity(), arg_most_specific)
-        SingleArgumentAmbiguity()
-    elseif in_t(arg_most_specific, matching_signatures)
-        arg_most_specific
-    else
-        MultipleArgumentAmbiguity()
+        return SingleArgumentAmbiguity()
     end
+
+    signature = match_t(arg_most_specific, matching_signatures)
+    signature === nothing ? MultipleArgumentAmbiguity() : signature
 end

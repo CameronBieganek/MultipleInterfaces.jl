@@ -254,14 +254,10 @@ function d end
 @interface C begin c end
 @interface D extends C begin d end
 
-struct Ant end
-struct Bear end
 struct Cat end
 struct Dog end
 struct Mouse end
 
-@type Ant implements A
-@type Bear implements B
 @type Cat implements C
 @type Dog implements D
 @type Mouse implements A, B
