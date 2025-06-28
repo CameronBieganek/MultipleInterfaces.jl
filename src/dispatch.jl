@@ -55,13 +55,11 @@ function is_AND_ex(ex)
 end
 
 
-function _concrete_interfaces(ex)
-    ex isa Symbol && return ex
+function concrete_interfaces(ex)
+    ex isa Symbol && return esc(ex)
     is_AND_ex(ex) || throw_idispatch_syntax_error()
-    vcat(_concrete_interfaces(ex.args[2]), _concrete_interfaces(ex.args[3]))
+    vcat(concrete_interfaces(ex.args[2]), concrete_interfaces(ex.args[3]))
 end
-
-concrete_interfaces(ex) = esc.(_concrete_interfaces(ex))
 
 
 # TODO: Fix handling of first argument in `foo(::Int, a: A)`.
