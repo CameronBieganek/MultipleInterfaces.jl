@@ -269,3 +269,60 @@ struct Mouse end
 @test foo(Mouse(), Dog()) == 2
 
 end
+
+
+
+
+module IMethodRedefinitionTests
+
+using Test
+using ExtendableInterfaces
+
+
+function a end
+function b end
+function c end
+
+@interface A begin a end
+@interface B begin b end
+@interface C begin c end
+
+struct Ant end
+struct Mouse end
+
+@type Ant implements A
+@type Mouse implements B, C
+
+
+@idispatch foo(x: A) = 1
+
+@testset "`foo` method first definition" begin
+    @test foo(Ant()) == 1
+end
+
+@idispatch foo(x: A) = 2
+
+@testset "`foo` method second definition" begin
+    @test foo(Ant()) == 2
+end
+
+
+@idispatch bar(x: A, y: B & C) = 1
+
+@testset "`bar` method first definition" begin
+    @test bar(Ant(), Mouse()) == 1
+end
+
+@idispatch bar(x: A, y: B & C) = 2
+
+@testset "`bar` method second definition" begin
+    @test bar(Ant(), Mouse()) == 2
+end
+
+@idispatch bar(x: A, y: C & B) = 3
+
+@testset "`bar` method second definition" begin
+    @test bar(Ant(), Mouse()) == 3
+end
+
+end
