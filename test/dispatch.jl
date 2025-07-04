@@ -680,3 +680,42 @@ end
 end
 
 end
+
+
+
+####################################################################################################
+
+module DispatchWithModulePrefixedInterfaces
+
+using Test
+using ExtendableInterfaces
+
+module Foo
+    using ExtendableInterfaces
+    function a end
+    @interface A begin a end
+end
+
+module Bar
+    using ExtendableInterfaces
+    function b end
+    @interface B begin b end
+end
+
+struct Ant end
+struct Bear end
+struct Mouse end
+
+@type Ant implements Foo.A
+@type Bear implements Bar.B
+@type Mouse implements Foo.A, Bar.B
+
+@idispatch asdf(a: Foo.A, b: Bar.B) = 1
+@idispatch asdf(x: Foo.A & Bar.B) = 2
+
+@testset "dispatch with module prefixes" begin
+    @test asdf(Ant(), Bear()) == 1
+    @test asdf(Mouse()) == 2
+end
+
+end
