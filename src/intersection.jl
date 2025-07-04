@@ -8,12 +8,13 @@ struct Intersection{T <: InterfaceInstances} <: Interface
 end
 
 
-function simplify(interfaces::InterfaceInstances)
+function normalize(interfaces::InterfaceInstances)
     simpler = remove_superinterfaces(interfaces)
     if length(simpler) == 1
         typeof(simpler[1])
     else
-        Intersection(simpler)
+        sorted_simpler = sort(collect(simpler), by=concrete_interface_id)
+        Intersection(tuple(sorted_simpler...))
     end
 end
 
@@ -22,10 +23,10 @@ end
 
 Base.:&(::Type{S}, ::Type{S}) where {S <: Intersection} = S
 Base.:&(::Type{S}, ::Type{S}) where {S <: ConcreteInterface} = S
-Base.:&(S::Type{<:ConcreteInterface}, T::Type{<:ConcreteInterface}) = simplify((S(), T()))
-Base.:&(s::Intersection, T::Type{<:ConcreteInterface}) = simplify((s.interfaces..., T()))
-Base.:&(S::Type{<:ConcreteInterface}, t::Intersection) = simplify((S(), t.interfaces...))
-Base.:&(s::Intersection, t::Intersection) = simplify((s.interfaces, t.interfaces...))
+Base.:&(S::Type{<:ConcreteInterface}, T::Type{<:ConcreteInterface}) = normalize((S(), T()))
+Base.:&(s::Intersection, T::Type{<:ConcreteInterface}) = normalize((s.interfaces..., T()))
+Base.:&(S::Type{<:ConcreteInterface}, t::Intersection) = normalize((S(), t.interfaces...))
+Base.:&(s::Intersection, t::Intersection) = normalize((s.interfaces..., t.interfaces...))
 
 
 function Base.show(io::IO, i::Intersection)
@@ -56,4 +57,4 @@ is_subinterface(s::Intersection, T::Type{<:ConcreteInterface}) = _is_subinterfac
 is_subinterface(s::Intersection, t::Intersection) = _is_subinterface(s, t)
 
 
-Base.:(==)(s::Intersection, t::Intersection) = _is_subinterface(s, t) && _is_subinterface(t, s)
+# NOTE: For `Base.==` on interface intersections, we rely on the default fallback to `===`.

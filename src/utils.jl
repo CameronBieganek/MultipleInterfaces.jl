@@ -69,30 +69,6 @@ in_t(::T, ::Tuple{T, Vararg}) where {T} = true
 in_t(x::S, t::Tuple{T, Vararg}) where {S, T} = in_t(x, tail(t))
 
 
-# NOTE: The definition of `in_t` above is only meant to work with singleton types,
-# which is the only way that it is currently used in the codebase. For example,
-# with this definition, `in_t(A & B, (A(), B & A))` is false. If necessary, we could
-# use the definition below instead. (I didn't use it because I was afraid of inference
-# or compile time implications of using `==`.)
-#
-# function in_t(x, t::Tuple)
-#     x == t[1] || in_t(x, tail(t))
-# end
-
-
-# Return the first element `y` of `t` such that `x == y`. If there is no such
-# element, return `nothing`. For example, this:
-#     `match_t(A & B, (A(), B & A, B()))`
-# returns this:
-#     `B & A`
-# Recall that `A & B == B & A`, but `A & B !== B & A`.
-match_t(x, t::Tuple{}) = nothing
-
-function match_t(x, t::Tuple)
-    x == t[1] ? t[1] : match_t(x, tail(t))
-end
-
-
 # NOTE: This function assumes that the elements of the input tuple are unique.
 delete(::Tuple{}, x) = ()
 delete(t::Tuple{T, Vararg}, ::T) where {T} = tail(t)

@@ -9,6 +9,7 @@ using ExtendableInterfaces
 function a end
 function b end
 function h end
+function i end
 
 @interface A begin
     a
@@ -21,6 +22,11 @@ end
 # Isolated node in interface DAG.
 @interface H begin
     h
+end
+
+# Isolated node in interface DAG.
+@interface I begin
+    i
 end
 
 @interface C extends A, B
@@ -64,6 +70,12 @@ end
     @test A & B & B & A == A & B == B & A
     @test B & B & A & A == A & B == B & A
     @test C & A & B & B & A & C == A & B & C == C & B & A
+
+    # These tests check the `Base.:&(s::Intersection, t::Intersection)` method:
+    @test (A & B) & (H & I) == A & B & H & I
+    @test (A & B) & (H & A) == A & B & H
+    @test (A & B) & (A & B) == A & B
+    @test (A & B) & (B & A) == A & B
 end
 
 end

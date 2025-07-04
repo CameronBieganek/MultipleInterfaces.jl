@@ -21,6 +21,13 @@ function required_methods(I::Type{<:ConcreteInterface})
 end
 
 
+# This function gets overloaded by the `@interface` macro in the user scope.
+function var"-ExtendableInterfaces-concrete_interface_id-" end
+
+# A more convenient name for internal usage.
+concrete_interface_id(x::ConcreteInterface) = var"-ExtendableInterfaces-concrete_interface_id-"(x)
+
+
 function interface_helper(name, superinterfaces, methods_block)
     if isnothing(methods_block)
         methods = ()
@@ -55,6 +62,7 @@ function interface_helper(name, superinterfaces, methods_block)
 
         import ExtendableInterfaces: var"#ExtendableInterfaces#superinterfaces#"
         import ExtendableInterfaces: var"#ExtendableInterfaces#required_methods#"
+        import ExtendableInterfaces: var"-ExtendableInterfaces-concrete_interface_id-"
 
         function $(esc(Symbol("#ExtendableInterfaces#superinterfaces#")))(::$esc_name)
             $esc_superinterface_objs
@@ -62,6 +70,16 @@ function interface_helper(name, superinterfaces, methods_block)
 
         function $(esc(Symbol("#ExtendableInterfaces#required_methods#")))(::$esc_name)
             ($(methods...),)
+        end
+
+        let
+            global var"-ExtendableInterfaces-concrete_interface_id-"
+
+            id = UInt128(uuid4())
+
+            function $(esc(Symbol("-ExtendableInterfaces-concrete_interface_id-")))(::$esc_name)
+                id
+            end
         end
 
         nothing

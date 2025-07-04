@@ -117,9 +117,10 @@ macro idispatch(fdef)
                     push!(interface_signature, esc(interface_ex))
                     push!(interface_objects, :($(esc(interface_ex))()))
                 elseif is_AND_ex(interface_ex)
-                    arg_signature = :(Intersection{Tuple{$(concrete_interfaces(interface_ex)...)}})
+                    esc_interface_ex = esc(interface_ex)
+                    arg_signature = :(typeof($esc_interface_ex))
                     push!(interface_signature, arg_signature)
-                    push!(interface_objects, :($(esc(interface_ex))))
+                    push!(interface_objects, esc_interface_ex)
                 else
                     throw_idispatch_syntax_error()
                 end
@@ -216,9 +217,10 @@ Base.@assume_effects :foldable function dispatch(f, interface_args)
     arg_most_specific = map_t(most_specific, arg_dispatches)
 
     if in_t(SingleArgumentAmbiguity(), arg_most_specific)
-        return SingleArgumentAmbiguity()
+        SingleArgumentAmbiguity()
+    elseif in_t(arg_most_specific, matching_signatures)
+        arg_most_specific
+    else
+        MultipleArgumentAmbiguity()
     end
-
-    signature = match_t(arg_most_specific, matching_signatures)
-    signature === nothing ? MultipleArgumentAmbiguity() : signature
 end

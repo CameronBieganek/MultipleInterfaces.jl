@@ -2,3 +2,9 @@ name = "ExtendableInterfaces"
 uuid = "822ac178-5032-4fc5-9e36-cfa8f056a624"
 authors = ["Cameron Bieganek"]
 version = "0.1.0"
+
+[deps]
+UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
+
+[compat]
+UUIDs = "1"
