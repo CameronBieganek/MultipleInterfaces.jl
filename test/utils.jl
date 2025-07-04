@@ -4,9 +4,8 @@ module UtilsTests
 
 using Test
 using ExtendableInterfaces
-using ExtendableInterfaces: all_t, any_t, ancestors, delete, filter_t, foldl_t, in_t
-using ExtendableInterfaces: intersect_t, map_t, remove_superinterfaces, tail
-using ExtendableInterfaces: transpose_t, union_t, unique_t
+using ExtendableInterfaces: all_t, any_t, ancestors, filter_t, foldl_t, in_t, map_t
+using ExtendableInterfaces: remove_superinterfaces, tail, transpose_t, union_t
 
 
 function a end
@@ -67,10 +66,6 @@ end
     @test any_t(x -> x in (A(), C()), (C(), ))
     @test !any_t(x -> x in (A(), C()), (E(), ))
 
-    @test delete((), B()) == ()
-    @test delete((A(), B(), C()), B()) == (A(), C())
-    @test delete((A(), B(), C()), D()) == (A(), B(), C())
-
     @test filter_t(==(A()), ()) == ()
     @test filter_t(==(A()), (B(), A(), A(), C())) == (A(), A())
     @test filter_t(!=(A()), (B(), A(), A(), C())) == (B(), C())
@@ -85,25 +80,6 @@ end
     @test !in_t(C(), (A(), B()))
     @test in_t(C(), (C(), ))
     @test !in_t(D(), ())
-
-    @test issetequal(
-        intersect_t(
-            (A(), B(), C()),
-            (B(), C(), D())
-        ),
-        (B(), C())
-    )
-    @test (C(), ) == intersect_t(
-        (A(), B(), C()),
-        (C(), D(), E())
-    )
-    @test () == intersect_t(
-        (A(), B(), C()),
-        (D(), E(), F())
-    )
-    @test intersect_t((), (A(), B())) == ()
-    @test intersect_t((A(), B()), ()) == ()
-    @test intersect_t((), ()) == ()
 
     @test map_t(foo, ()) == ()
     @test map_t(foo, (A(), )) == (1, )
@@ -194,20 +170,6 @@ end
         (A(), B())
     )
     @test union_t((), ()) == ()
-
-    @test issetequal(
-        unique_t((A(), B(), B(), A())),
-        (A(), B())
-    )
-    @test issetequal(
-        unique_t((A(), B(), B(), C(), A())),
-        (A(), B(), C())
-    )
-    @test issetequal(
-        unique_t((A(), A())),
-        (A(), )
-    )
-    @test unique_t(()) == ()
 
 end
 

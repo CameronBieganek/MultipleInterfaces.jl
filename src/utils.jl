@@ -7,24 +7,6 @@
 # with reasonable confidence.
 
 
-# TODO: Delete functions that are no longer used.
-
-
-# This function assumes that `s` and `t` do not contain any duplicates.
-intersect_t(::Tuple{}, t::Tuple) = ()
-
-function intersect_t(s::Tuple, t::Tuple)
-    s1 = s[1]
-    s_tail = tail(s)
-
-    if in_t(s1, t)
-        (s1, intersect_t(s_tail, t)...)
-    else
-        intersect_t(s_tail, t)
-    end
-end
-
-
 # This function assumes that `s` and `t` do not contain any duplicates.
 union_t(::Tuple{}, t::Tuple) = t
 
@@ -67,15 +49,6 @@ end
 in_t(::Any, ::Tuple{}) = false
 in_t(::T, ::Tuple{T, Vararg}) where {T} = true
 in_t(x::S, t::Tuple{T, Vararg}) where {S, T} = in_t(x, tail(t))
-
-
-# NOTE: This function assumes that the elements of the input tuple are unique.
-delete(::Tuple{}, x) = ()
-delete(t::Tuple{T, Vararg}, ::T) where {T} = tail(t)
-
-function delete(t::Tuple{S, Vararg}, x::T) where {S, T}
-    (t[1], delete(tail(t), x)...)
-end
 
 
 map_t(f, ::Tuple{}) = ()
@@ -139,20 +112,6 @@ function any_t(f, t::Tuple)
         any_t(f, tail(t))
     else
         true
-    end
-end
-
-
-unique_t(::Tuple{}) = ()
-
-function unique_t(t::Tuple)
-    first = t[1]
-    rest = tail(t)
-
-    if in_t(first, rest)
-        unique_t(rest)
-    else
-        (first, unique_t(rest)...)
     end
 end
 
