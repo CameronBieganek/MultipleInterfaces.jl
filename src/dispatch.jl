@@ -138,7 +138,7 @@ macro idispatch(fdef)
     end
 
     underscore_signature_str = "(" * join(underscore_signature, ",") * ")"
-    _f_name = esc(Symbol("idispatch#$f_name_sym$underscore_signature_str"))
+    _f_name = esc(Symbol("-idispatch-$f_name_sym$underscore_signature_str-"))
 
     quote
         if (

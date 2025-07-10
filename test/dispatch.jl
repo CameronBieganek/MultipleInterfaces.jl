@@ -41,7 +41,7 @@ end
     @test signatures(foo) == [
         (Int, InterfaceArg, String, InterfaceArg)
     ]
-    @test interface_signatures(var"idispatch#foo(Int,_,String,_)") == ((A(), B()), )
+    @test interface_signatures(var"-idispatch-foo(Int,_,String,_)-") == ((A(), B()), )
 
 end
 
@@ -55,7 +55,7 @@ end
         (Int, InterfaceArg, String, InterfaceArg)
     ]
     @test issetequal(
-        interface_signatures(var"idispatch#foo(Int,_,String,_)"),
+        interface_signatures(var"-idispatch-foo(Int,_,String,_)-"),
         (
             (A(), B()),
             (A(), C())
@@ -74,7 +74,7 @@ end
         (Int, InterfaceArg, String, InterfaceArg)
     ]
     @test issetequal(
-        interface_signatures(var"idispatch#foo(Int,_,String,_)"),
+        interface_signatures(var"-idispatch-foo(Int,_,String,_)-"),
         (
             (A(), B()),
             (A(), C()),
@@ -94,7 +94,7 @@ end
         (Int, InterfaceArg, String, InterfaceArg),
         (Int, InterfaceArg, Int, InterfaceArg)
     ])
-    @test interface_signatures(var"idispatch#foo(Int,_,Int,_)") == ((B(), D()), )
+    @test interface_signatures(var"-idispatch-foo(Int,_,Int,_)-") == ((B(), D()), )
 
 end
 
@@ -109,7 +109,7 @@ end
         (Int, InterfaceArg, Int, InterfaceArg)
     ])
     @test issetequal(
-        interface_signatures(var"idispatch#foo(Int,_,Int,_)"),
+        interface_signatures(var"-idispatch-foo(Int,_,Int,_)-"),
         (
             (B(), D()),
             (C(), F())
@@ -129,11 +129,11 @@ end
         (Int, InterfaceArg, Int, InterfaceArg),
         (Int, InterfaceArg, Int)
     ])
-    @test interface_signatures(var"idispatch#foo(Int,_,Int)") == ((D(), ), )
+    @test interface_signatures(var"-idispatch-foo(Int,_,Int)-") == ((D(), ), )
 
     # Make sure the first two interface signatures haven't been accidentally modified.
     @test issetequal(
-        interface_signatures(var"idispatch#foo(Int,_,String,_)"),
+        interface_signatures(var"-idispatch-foo(Int,_,String,_)-"),
         (
             (A(), B()),
             (A(), C()),
@@ -141,7 +141,7 @@ end
         )
     )
     @test issetequal(
-        interface_signatures(var"idispatch#foo(Int,_,Int,_)"),
+        interface_signatures(var"-idispatch-foo(Int,_,Int,_)-"),
         (
             (B(), D()),
             (C(), F())

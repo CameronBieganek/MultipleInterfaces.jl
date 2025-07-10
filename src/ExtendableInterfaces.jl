@@ -13,7 +13,7 @@ abstract type Interface end
 abstract type ConcreteInterface end
 
 # TODO: Use hidden names for the methods that are overloaded by macros, and
-# add something like `import ExtendableInterfaces: var"#interface_signatures#"` to
+# add something like `import ExtendableInterfaces: var"-interface_signatures-"` to
 # the macro expansions.
 
 # TODO: Update `superinterfaces` and `required_methods` so they work on interface intersections?

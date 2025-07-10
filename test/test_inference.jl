@@ -44,12 +44,12 @@ struct Cat end
 @type Cat implements B
 @type Cat implements E
 
-@inferred dispatch(var"idispatch#foo(_)", (Cat(), ))
+@inferred dispatch(var"-idispatch-foo(_)-", (Cat(), ))
 
 struct Dog end
 @type Dog implements C, D
 
-@inferred dispatch(var"idispatch#foo(_)", (Dog(), ))
+@inferred dispatch(var"-idispatch-foo(_)-", (Dog(), ))
 
 
 # ---- bar ----
@@ -63,12 +63,12 @@ struct Bear end
 @type Bear implements D
 @type Bear implements E
 
-@inferred dispatch(var"idispatch#bar(_)", (Bear(), ))
+@inferred dispatch(var"-idispatch-bar(_)-", (Bear(), ))
 
 struct Fish end
 @type Fish implements C, D
 
-@inferred dispatch(var"idispatch#bar(_)", (Fish(), ))
+@inferred dispatch(var"-idispatch-bar(_)-", (Fish(), ))
 
 
 # ---- asdf ----
@@ -79,23 +79,23 @@ struct Fish end
 struct Squid end
 @type Squid implements B, D
 
-@inferred dispatch(var"idispatch#asdf(_)", (Squid(), ))
+@inferred dispatch(var"-idispatch-asdf(_)-", (Squid(), ))
 
 struct Crow end
 @type Crow implements B
 @type Crow implements H
 
-@inferred dispatch(var"idispatch#asdf(_)", (Crow(), ))
+@inferred dispatch(var"-idispatch-asdf(_)-", (Crow(), ))
 
 struct Raven end
 @type Raven implements B, E
 
-@inferred dispatch(var"idispatch#asdf(_)", (Raven(), ))
+@inferred dispatch(var"-idispatch-asdf(_)-", (Raven(), ))
 
 struct Goat end
 @type Goat implements H
 
-@inferred dispatch(var"idispatch#asdf(_)", (Goat(), ))
+@inferred dispatch(var"-idispatch-asdf(_)-", (Goat(), ))
 
 
 # ---- qwer ----
@@ -107,24 +107,24 @@ struct Goat end
 struct Lizard end
 @type Lizard implements A, B, C
 
-@inferred dispatch(var"idispatch#qwer(_)", (Lizard(), ))
+@inferred dispatch(var"-idispatch-qwer(_)-", (Lizard(), ))
 
 struct Toad end
 @type Toad implements B
 @type Toad implements C
 @type Toad implements D
 
-@inferred dispatch(var"idispatch#qwer(_)", (Toad(), ))
+@inferred dispatch(var"-idispatch-qwer(_)-", (Toad(), ))
 
 struct Rabbit end
 @type Rabbit implements A
 
-@inferred dispatch(var"idispatch#qwer(_)", (Rabbit(), ))
+@inferred dispatch(var"-idispatch-qwer(_)-", (Rabbit(), ))
 
 struct Eagle end
 @type Eagle implements B
 
-@inferred dispatch(var"idispatch#qwer(_)", (Eagle(), ))
+@inferred dispatch(var"-idispatch-qwer(_)-", (Eagle(), ))
 
 
 # -------- Transitive "implements" declarations. --------
@@ -164,9 +164,9 @@ struct Frog end
 @type Frog implements N
 @type Frog implements Q
 
-@inferred dispatch(var"idispatch#baz(_)", (Turtle(), ))
-@inferred dispatch(var"idispatch#bbb(_)", (Frog(), ))
-@inferred dispatch(var"idispatch#aaa(_)", (Turtle(), ))
+@inferred dispatch(var"-idispatch-baz(_)-", (Turtle(), ))
+@inferred dispatch(var"-idispatch-bbb(_)-", (Frog(), ))
+@inferred dispatch(var"-idispatch-aaa(_)-", (Turtle(), ))
 
 end # module
 
@@ -221,35 +221,35 @@ struct Hamster end
 @type Gerbal implements G
 @type Hamster implements H
 
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Cat(), Gerbal()))
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Cat(), Hamster()))
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Dog(), Gerbal()))
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Dog(), Hamster()))
-@inferred dispatch(var"idispatch#foo(String,_,_)", (Cat(), Gerbal()))
-@inferred dispatch(var"idispatch#foo(String,_,_)", (Cat(), Hamster()))
-@inferred dispatch(var"idispatch#foo(String,_,_)", (Dog(), Gerbal()))
-@inferred dispatch(var"idispatch#foo(String,_,_)", (Dog(), Hamster()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Cat(), Gerbal()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Cat(), Hamster()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Dog(), Gerbal()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Dog(), Hamster()))
+@inferred dispatch(var"-idispatch-foo(String,_,_)-", (Cat(), Gerbal()))
+@inferred dispatch(var"-idispatch-foo(String,_,_)-", (Cat(), Hamster()))
+@inferred dispatch(var"-idispatch-foo(String,_,_)-", (Dog(), Gerbal()))
+@inferred dispatch(var"-idispatch-foo(String,_,_)-", (Dog(), Hamster()))
 
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Cat(), Cat()))
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Cat(), Dog()))
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Dog(), Cat()))
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Dog(), Dog()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Cat(), Cat()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Cat(), Dog()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Dog(), Cat()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Dog(), Dog()))
 
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Gerbal(), Cat()))
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Gerbal(), Dog()))
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Hamster(), Cat()))
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Hamster(), Dog()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Gerbal(), Cat()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Gerbal(), Dog()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Hamster(), Cat()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Hamster(), Dog()))
 
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Gerbal(), Gerbal()))
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Gerbal(), Hamster()))
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Hamster(), Gerbal()))
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Hamster(), Hamster()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Gerbal(), Gerbal()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Gerbal(), Hamster()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Hamster(), Gerbal()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Hamster(), Hamster()))
 
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Ant(), Elephant()))
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Ant(), Gerbal()))
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Ant(), Hamster()))
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Cat(), Elephant()))
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Dog(), Elephant()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Ant(), Elephant()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Ant(), Gerbal()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Ant(), Hamster()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Cat(), Elephant()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Dog(), Elephant()))
 
 end
 
@@ -311,8 +311,8 @@ struct Horse end
 @type Dog implements N
 @type Horse implements Q, R
 
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Cat(), Dog()))
-@inferred dispatch(var"idispatch#bar(Int,_,_)", (Cat(), Horse()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Cat(), Dog()))
+@inferred dispatch(var"-idispatch-bar(Int,_,_)-", (Cat(), Horse()))
 
 end
 
@@ -354,7 +354,7 @@ struct Dog end
 @type Cat implements B
 @type Dog implements Q
 
-@inferred dispatch(var"idispatch#foo(Int,_,_)", (Cat(), Dog()))
+@inferred dispatch(var"-idispatch-foo(Int,_,_)-", (Cat(), Dog()))
 
 end
 
@@ -433,36 +433,36 @@ struct Chameleon end
 @idispatch foo(c: F, x::String, p: P) = 3
 @idispatch foo(c: G, x::String, n: N) = 4
 
-@inferred dispatch(var"idispatch#foo(_,String,_)", (Cat(), Newt()))
-@inferred dispatch(var"idispatch#foo(_,String,_)", (Cat(), Parrot()))
-@inferred dispatch(var"idispatch#foo(_,String,_)", (Cat(), Salamander()))
-@inferred dispatch(var"idispatch#foo(_,String,_)", (Cat(), Tiger()))
-@inferred dispatch(var"idispatch#foo(_,String,_)", (Cat(), Chameleon()))
+@inferred dispatch(var"-idispatch-foo(_,String,_)-", (Cat(), Newt()))
+@inferred dispatch(var"-idispatch-foo(_,String,_)-", (Cat(), Parrot()))
+@inferred dispatch(var"-idispatch-foo(_,String,_)-", (Cat(), Salamander()))
+@inferred dispatch(var"-idispatch-foo(_,String,_)-", (Cat(), Tiger()))
+@inferred dispatch(var"-idispatch-foo(_,String,_)-", (Cat(), Chameleon()))
 
-@inferred dispatch(var"idispatch#foo(_,String,_)", (Fox(), Tiger()))
-@inferred dispatch(var"idispatch#foo(_,String,_)", (Fox(), Newt()))
-@inferred dispatch(var"idispatch#foo(_,String,_)", (Chameleon(), Tiger()))
-@inferred dispatch(var"idispatch#foo(_,String,_)", (Chameleon(), Newt()))
+@inferred dispatch(var"-idispatch-foo(_,String,_)-", (Fox(), Tiger()))
+@inferred dispatch(var"-idispatch-foo(_,String,_)-", (Fox(), Newt()))
+@inferred dispatch(var"-idispatch-foo(_,String,_)-", (Chameleon(), Tiger()))
+@inferred dispatch(var"-idispatch-foo(_,String,_)-", (Chameleon(), Newt()))
 
-@inferred dispatch(var"idispatch#foo(_,String,_)", (Dog(), Newt()))
-@inferred dispatch(var"idispatch#foo(_,String,_)", (Dog(), Parrot()))
-@inferred dispatch(var"idispatch#foo(_,String,_)", (Dog(), Salamander()))
-@inferred dispatch(var"idispatch#foo(_,String,_)", (Dog(), Tiger()))
+@inferred dispatch(var"-idispatch-foo(_,String,_)-", (Dog(), Newt()))
+@inferred dispatch(var"-idispatch-foo(_,String,_)-", (Dog(), Parrot()))
+@inferred dispatch(var"-idispatch-foo(_,String,_)-", (Dog(), Salamander()))
+@inferred dispatch(var"-idispatch-foo(_,String,_)-", (Dog(), Tiger()))
 
-@inferred dispatch(var"idispatch#foo(_,String,_)", (Fox(), Parrot()))
-@inferred dispatch(var"idispatch#foo(_,String,_)", (Fox(), Salamander()))
-@inferred dispatch(var"idispatch#foo(_,String,_)", (Chameleon(), Parrot()))
-@inferred dispatch(var"idispatch#foo(_,String,_)", (Chameleon(), Salamander()))
-@inferred dispatch(var"idispatch#foo(_,String,_)", (Chameleon(), Chameleon()))
+@inferred dispatch(var"-idispatch-foo(_,String,_)-", (Fox(), Parrot()))
+@inferred dispatch(var"-idispatch-foo(_,String,_)-", (Fox(), Salamander()))
+@inferred dispatch(var"-idispatch-foo(_,String,_)-", (Chameleon(), Parrot()))
+@inferred dispatch(var"-idispatch-foo(_,String,_)-", (Chameleon(), Salamander()))
+@inferred dispatch(var"-idispatch-foo(_,String,_)-", (Chameleon(), Chameleon()))
 
 @idispatch bar(h: H) = 1
 
-@inferred dispatch(var"idispatch#bar(_)", (Horse(), ))
-@inferred dispatch(var"idispatch#bar(_)", (Cat(), ))
-@inferred dispatch(var"idispatch#bar(_)", (Fox(), ))
-@inferred dispatch(var"idispatch#bar(_)", (Salamander(), ))
-@inferred dispatch(var"idispatch#bar(_)", (Tiger(), ))
-@inferred dispatch(var"idispatch#bar(_)", (Chameleon(), ))
+@inferred dispatch(var"-idispatch-bar(_)-", (Horse(), ))
+@inferred dispatch(var"-idispatch-bar(_)-", (Cat(), ))
+@inferred dispatch(var"-idispatch-bar(_)-", (Fox(), ))
+@inferred dispatch(var"-idispatch-bar(_)-", (Salamander(), ))
+@inferred dispatch(var"-idispatch-bar(_)-", (Tiger(), ))
+@inferred dispatch(var"-idispatch-bar(_)-", (Chameleon(), ))
 
 @idispatch asdf(x::Int, n: N, e: E) = 1
 @idispatch asdf(x::Int, p: P, e: E) = 2
@@ -471,18 +471,18 @@ struct Chameleon end
 struct Rooster end
 @type Rooster implements P, Q
 
-@inferred dispatch(var"idispatch#asdf(Int,_,_)", (Newt(), Fox()))
-@inferred dispatch(var"idispatch#asdf(Int,_,_)", (Newt(), Fox()))
-@inferred dispatch(var"idispatch#asdf(Int,_,_)", (Parrot(), Fox()))
-@inferred dispatch(var"idispatch#asdf(Int,_,_)", (Rooster(), Fox()))
+@inferred dispatch(var"-idispatch-asdf(Int,_,_)-", (Newt(), Fox()))
+@inferred dispatch(var"-idispatch-asdf(Int,_,_)-", (Newt(), Fox()))
+@inferred dispatch(var"-idispatch-asdf(Int,_,_)-", (Parrot(), Fox()))
+@inferred dispatch(var"-idispatch-asdf(Int,_,_)-", (Rooster(), Fox()))
 
 @idispatch qwer(c: C, p: P, x::Char) = 1
 @idispatch qwer(f: F, p: P, x::Char) = 2
 @idispatch qwer(c: C, s: S, x::Char) = 3
 
-@inferred dispatch(var"idispatch#qwer(_,_,Char)", (Cat(), Parrot()))
-@inferred dispatch(var"idispatch#qwer(_,_,Char)", (Fox(), Parrot()))
-@inferred dispatch(var"idispatch#qwer(_,_,Char)", (Cat(), Salamander()))
-@inferred dispatch(var"idispatch#qwer(_,_,Char)", (Fox(), Salamander()))
+@inferred dispatch(var"-idispatch-qwer(_,_,Char)-", (Cat(), Parrot()))
+@inferred dispatch(var"-idispatch-qwer(_,_,Char)-", (Fox(), Parrot()))
+@inferred dispatch(var"-idispatch-qwer(_,_,Char)-", (Cat(), Salamander()))
+@inferred dispatch(var"-idispatch-qwer(_,_,Char)-", (Fox(), Salamander()))
 
 end
