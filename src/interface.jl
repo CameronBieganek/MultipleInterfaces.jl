@@ -34,19 +34,20 @@ function interface_helper(name, superinterfaces, methods_block)
     else
         check_methods_block_head(methods_block)
 
-        if any(arg -> !(arg isa Union{Symbol, LineNumberNode}), methods_block.args)
+        if any(arg -> !(arg isa LineNumberNode) && !is_name(arg), methods_block.args)
             throw(ArgumentError(
                 "Something other than a function name has been provided in the " *
                 "list of required methods for an interface."
             ))
         end
 
-        methods = filter(arg -> arg isa Symbol, methods_block.args)
-        methods = map(m -> esc(m), methods)
+        methods = filter(is_name, methods_block.args)
+        methods = map(esc, methods)
     end
 
-    esc_superinterfaces = map(s -> esc(s), superinterfaces.args)
-    esc_superinterface_objs = Expr(:tuple, map(s -> :($s()), esc_superinterfaces)...)
+    esc_superinterfaces = map(esc, superinterfaces.args)
+    esc_superinterface_objs = map(s -> :($s()), esc_superinterfaces)
+    tuple_esc_superinterface_objs = Expr(:tuple, esc_superinterface_objs...)
 
     esc_name = esc(name)
 
@@ -65,7 +66,7 @@ function interface_helper(name, superinterfaces, methods_block)
         import ExtendableInterfaces: var"-ExtendableInterfaces-concrete_interface_id-"
 
         function $(esc(Symbol("-ExtendableInterfaces-superinterfaces-")))(::$esc_name)
-            $esc_superinterface_objs
+            $tuple_esc_superinterface_objs
         end
 
         function $(esc(Symbol("-ExtendableInterfaces-required_methods-")))(::$esc_name)
@@ -132,13 +133,10 @@ macro interface(
         ))
     end
 
-    if superinterfaces isa Symbol
+    if is_name(superinterfaces)
         superinterfaces = :(($superinterfaces, ))
     else
-        if (
-            superinterfaces.head != :tuple  ||
-            any(arg -> !(arg isa Symbol), superinterfaces.args)
-        )
+        if superinterfaces.head != :tuple || any(!is_name, superinterfaces.args)
             throw(ArgumentError(
                 "The superinterfaces must be provided as a comma-separated list, like " *
                 "`@interface C extends A, B`."
@@ -200,19 +198,24 @@ end
 # TODO: Handle parametric types and possibly abstract types. Or maybe error
 # if `isabstracttype(T)` is true. (That's only true if it is an abstract type
 # declared with `abstract type`.)
-macro type(type, implements::Symbol, interfaces_ex)
+macro type(type, implements::Symbol, interfaces_list_ex)
     type = esc(type)
 
     implements != :implements && throw_type_macro_syntax_error()
 
-    if interfaces_ex isa Symbol
-        interface_syms = [interfaces_ex]
+    if is_name(interfaces_list_ex)
+        interface_exs = [interfaces_list_ex]
+    elseif interfaces_list_ex.head == :tuple
+        if all(is_name, interfaces_list_ex.args)
+            interface_exs = interfaces_list_ex.args
+        else
+            throw_type_macro_syntax_error()
+        end
     else
-        interfaces_ex.head != :tuple && throw_type_macro_syntax_error()
-        interface_syms = interfaces_ex.args
+        throw_type_macro_syntax_error()
     end
 
-    interfaces = map(sym -> :($(esc(sym))()), interface_syms)
+    esc_interface_objs = map(ex -> :($(esc(ex))()), interface_exs)
 
     quote
         import ExtendableInterfaces: var"-ExtendableInterfaces-implements-"
@@ -220,7 +223,7 @@ macro type(type, implements::Symbol, interfaces_ex)
         let
             global var"-ExtendableInterfaces-implements-"
 
-            implemented = update_implemented($type, ($(interfaces...), ))
+            implemented = update_implemented($type, ($(esc_interface_objs...), ))
 
             function $(esc(Symbol("-ExtendableInterfaces-implements-")))(::Type{$type})
                 implemented

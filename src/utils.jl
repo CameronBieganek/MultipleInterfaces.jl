@@ -211,3 +211,12 @@ function _remove_superinterfaces_r(visited, not_visited::Tuple)
     non_superinterfaces = filter_t(y -> !_is_subinterface(x, y), rest)
     _remove_superinterfaces_r((x, visited...), non_superinterfaces)
 end
+
+
+is_name(::Any) = false
+is_name(::Symbol) = true
+is_name(x::QuoteNode) = is_name(x.value)
+
+function is_name(ex::Expr)
+    ex.head == :(.) && is_name(ex.args[1]) && is_name(ex.args[2])
+end
