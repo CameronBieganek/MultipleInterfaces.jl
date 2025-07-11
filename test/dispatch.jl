@@ -690,6 +690,7 @@ module DispatchWithModulePrefixedInterfaces
 using Test
 using ExtendableInterfaces
 
+
 module Foo
     using ExtendableInterfaces
     function a end
@@ -698,24 +699,57 @@ end
 
 module Bar
     using ExtendableInterfaces
-    function b end
-    @interface B begin b end
+
+    module Qux
+        function b end
+    end
+
+    @interface B begin Qux.b end
 end
+
+function c end
+
+@interface C extends Bar.B begin c end
+
+@testset "`@interface` with module prefixes" begin
+    @test C ≼ Bar.B
+
+    @test required_methods(Foo.A) == (Foo.a, )
+    @test required_methods(Bar.B) == (Bar.Qux.b, )
+    @test required_methods(C) == (c, )
+
+    @test superinterfaces(Foo.A) == ()
+    @test superinterfaces(Bar.B) == ()
+    @test superinterface(C) == (Bar.B, )
+end
+
 
 struct Ant end
 struct Bear end
+struct Cat end
 struct Mouse end
 
 @type Ant implements Foo.A
 @type Bear implements Bar.B
+@type Cat implements C
 @type Mouse implements Foo.A, Bar.B
+
+@testset "`@type` with module prefixes" begin
+    @test implements(Ant) == (Foo.A, )
+    @test implements(Bear) == (Bar.B, )
+    @test issetequal(implements(Cat), (Bar.B, C))
+    @test issetequal(implements(Mouse), (Foo.A, Bar.B))
+end
+
 
 @idispatch asdf(a: Foo.A, b: Bar.B) = 1
 @idispatch asdf(x: Foo.A & Bar.B) = 2
+@idispatch asdf(a: Foo.A, c: C) = 3
 
-@testset "dispatch with module prefixes" begin
+@testset "`@idispatch` with module prefixes" begin
     @test asdf(Ant(), Bear()) == 1
     @test asdf(Mouse()) == 2
+    @test asdf(Ant(), Cat()) == 3
 end
 
 end
