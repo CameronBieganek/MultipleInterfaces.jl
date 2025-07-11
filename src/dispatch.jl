@@ -48,11 +48,16 @@ sym_vec(n) = Vector{Symbol}(undef, n)
 throw_idispatch_syntax_error() = error("Syntax error in the `@idispatch` macro.")
 
 
-# TODO: Make this recursive.
-function is_AND_ex(ex)
-    ex isa Expr &&
-    ex.head == :call &&
-    ex.args[1] == :&
+is_intersection_ex(::Any) = false
+
+
+function is_intersection_ex(ex::Expr)
+    (
+        ex.head == :call
+        && ex.args[1] == :&
+        && (is_name(ex.args[2]) || is_intersection_ex(ex.args[2]))
+        && (is_name(ex.args[3]) || is_intersection_ex(ex.args[3]))
+    )
 end
 
 
@@ -110,7 +115,7 @@ macro idispatch(fdef)
                 if is_name(interface_ex)
                     push!(interface_signature, esc(interface_ex))
                     push!(interface_objects, :($(esc(interface_ex))()))
-                elseif is_AND_ex(interface_ex)
+                elseif is_intersection_ex(interface_ex)
                     esc_interface_ex = esc(interface_ex)
                     arg_signature = :(typeof($esc_interface_ex))
                     push!(interface_signature, arg_signature)
