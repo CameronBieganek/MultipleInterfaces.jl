@@ -48,6 +48,7 @@ sym_vec(n) = Vector{Symbol}(undef, n)
 throw_idispatch_syntax_error() = error("Syntax error in the `@idispatch` macro.")
 
 
+# TODO: Make this recursive.
 function is_AND_ex(ex)
     ex isa Expr &&
     ex.head == :call &&
@@ -100,7 +101,7 @@ macro idispatch(fdef)
             type = underscore_type = :Any
         elseif arg_ex.head == :(::)
             name = arg_ex.args[1]
-            type = underscore_type = arg_ex.args[end]
+            type = underscore_type = arg_ex.args[2]
             normalized_arg = arg_ex
         elseif arg_ex.head == :call
             if (
@@ -113,7 +114,7 @@ macro idispatch(fdef)
                 push!(interface_arg_names, name)
 
                 interface_ex = arg_ex.args[3]
-                if interface_ex isa Symbol
+                if is_name(interface_ex)
                     push!(interface_signature, esc(interface_ex))
                     push!(interface_objects, :($(esc(interface_ex))()))
                 elseif is_AND_ex(interface_ex)

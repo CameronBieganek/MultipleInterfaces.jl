@@ -720,7 +720,7 @@ function c end
 
     @test superinterfaces(Foo.A) == ()
     @test superinterfaces(Bar.B) == ()
-    @test superinterface(C) == (Bar.B, )
+    @test superinterfaces(C) == (Bar.B, )
 end
 
 
@@ -750,6 +750,11 @@ end
     @test asdf(Ant(), Bear()) == 1
     @test asdf(Mouse()) == 2
     @test asdf(Ant(), Cat()) == 3
+
+    @test_throws MethodError asdf(1, 2, 3)
+    @test_throws NoMatchingIDispatchMethodError asdf(42)
+    @test_throws NoMatchingIDispatchMethodError asdf(Bear(), Ant())
+    @test_throws NoMatchingIDispatchMethodError asdf(Ant())
 end
 
 end
