@@ -56,13 +56,6 @@ function is_AND_ex(ex)
 end
 
 
-function concrete_interfaces(ex)
-    ex isa Symbol && return esc(ex)
-    is_AND_ex(ex) || throw_idispatch_syntax_error()
-    vcat(concrete_interfaces(ex.args[2]), concrete_interfaces(ex.args[3]))
-end
-
-
 # TODO: Fix handling of first argument in `foo(::Int, a: A)`.
 macro idispatch(fdef)
     # For now assume the single-line form of function definition.
