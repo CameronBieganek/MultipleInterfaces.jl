@@ -225,7 +225,7 @@ macro type(type, implements::Symbol, interfaces_list_ex)
 
             implemented = update_implemented($type, ($(esc_interface_objs...), ))
 
-            function $(esc(Symbol("-ExtendableInterfaces-implements-")))(::Type{$type})
+            function $(esc(Symbol("-ExtendableInterfaces-implements-")))(::Type{<:$type})
                 implemented
             end
         end

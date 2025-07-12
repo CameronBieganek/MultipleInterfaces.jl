@@ -792,3 +792,50 @@ struct Bear end
 end
 
 end
+
+
+
+####################################################################################################
+
+module DispatchOnParametricTypes
+
+using Test
+using ExtendableInterfaces
+
+function a end
+function b end
+function c end
+
+@interface A begin a end
+@interface B begin b end
+@interface C begin c end
+
+struct Ant{T} end
+struct Bear{T <: Real} end
+struct Cat{T <: Number} end
+
+@type Ant implements A
+@type Bear{<:Integer} implements B
+@type Cat{Float64} implements C
+
+@idispatch foo(a: A) = 1
+@idispatch foo(b: B) = 2
+@idispatch foo(c: C) = 3
+
+@testset "dispatch on parametric types" begin
+    @test foo(Ant{Int}()) == 1
+    @test foo(Ant{String}()) == 1
+    @test foo(Ant{AbstractFloat}()) == 1
+
+    @test foo(Bear{Int32}()) == 2
+    @test foo(Bear{Int64}()) == 2
+
+    @test foo(Cat{Float64}()) == 3
+
+    @test_throws NoMatchingIDispatchMethodError foo(Bear{Float32}())
+    @test_throws NoMatchingIDispatchMethodError foo(Bear{Float64}())
+    @test_throws NoMatchingIDispatchMethodError foo(Cat{Float32}())
+    @test_throws NoMatchingIDispatchMethodError foo(Cat{Int64}())
+end
+
+end
