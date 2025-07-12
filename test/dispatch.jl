@@ -5,7 +5,7 @@
 module IDispatchMacroTests
 
 using ExtendableInterfaces
-using ExtendableInterfaces: _signatures, interface_signatures, InterfaceArg
+using ExtendableInterfaces: signatures, interface_signatures, InterfaceArg
 using Test
 
 
@@ -38,7 +38,7 @@ end
 @testset "first @idispatch declaration" begin
 
     @test length(methods(foo)) == 1
-    @test _signatures(foo) == [
+    @test signatures(foo) == [
         (Int, InterfaceArg, String, InterfaceArg)
     ]
     @test interface_signatures(var"-idispatch-foo(Int,_,String,_)-") == ((A(), B()), )
@@ -51,7 +51,7 @@ end
 @testset "second @idispatch declaration" begin
 
     @test length(methods(foo)) == 1
-    @test _signatures(foo) == [
+    @test signatures(foo) == [
         (Int, InterfaceArg, String, InterfaceArg)
     ]
     @test issetequal(
@@ -70,7 +70,7 @@ end
 @testset "third @idispatch declaration" begin
 
     @test length(methods(foo)) == 1
-    @test _signatures(foo) == [
+    @test signatures(foo) == [
         (Int, InterfaceArg, String, InterfaceArg)
     ]
     @test issetequal(
@@ -90,7 +90,7 @@ end
 @testset "fourth @idispatch declaration" begin
 
     @test length(methods(foo)) == 2
-    @test issetequal(_signatures(foo), [
+    @test issetequal(signatures(foo), [
         (Int, InterfaceArg, String, InterfaceArg),
         (Int, InterfaceArg, Int, InterfaceArg)
     ])
@@ -104,7 +104,7 @@ end
 @testset "fifth @idispatch declaration" begin
 
     @test length(methods(foo)) == 2
-    @test issetequal(_signatures(foo), [
+    @test issetequal(signatures(foo), [
         (Int, InterfaceArg, String, InterfaceArg),
         (Int, InterfaceArg, Int, InterfaceArg)
     ])
@@ -124,7 +124,7 @@ end
 @testset "sixth @idispatch declaration" begin
 
     @test length(methods(foo)) == 3
-    @test issetequal(_signatures(foo), [
+    @test issetequal(signatures(foo), [
         (Int, InterfaceArg, String, InterfaceArg),
         (Int, InterfaceArg, Int, InterfaceArg),
         (Int, InterfaceArg, Int)

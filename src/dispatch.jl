@@ -25,24 +25,22 @@ function Base.showerror(io::IO, ::MultipleArgumentAmbiguityError)
 end
 
 
-# TODO: Make `signatures` and `interface_signatures` hidden.
-# TODO: Add unit tests to make sure everything works when `ExtendableInterfaces` is
-# not in scope. I.e., when the user does this:
-# `using ExtendableInterfaces: @interface, @type, @idispatch`.
-
-
 # This function gets overloaded by the `@idispatch` macro in the user scope.
 var"-ExtendableInterfaces-signatures-"(f) = Tuple[]
 
 # A more convenient name for internal usage.
-_signatures(f) = var"-ExtendableInterfaces-signatures-"(f)
+signatures(f) = var"-ExtendableInterfaces-signatures-"(f)
 
-is_signature_defined(f, signature) = (signature in _signatures(f))
+is_signature_defined(f, signature) = (signature in signatures(f))
 
 
+# This function gets overloaded by the `@idispatch` macro in the user scope.
 # Return a tuple of signature tuples, where each signature tuple indicates the
 # interfaces that are dispatched on for one i-dispatch method.
-interface_signatures(f) = ()
+var"-ExtendableInterfaces-interface_signatures-"(f) = ()
+
+# A more convenient name for internal usage.
+interface_signatures(f) = var"-ExtendableInterfaces-interface_signatures-"(f)
 
 
 struct InterfaceArg end
@@ -180,12 +178,20 @@ macro idispatch(fdef)
                 end
             end
         end
+
         $_f_name(::Tuple{$(interface_signature...)}, $(arg_names...)) = $(body.args...)
 
+        import ExtendableInterfaces: var"-ExtendableInterfaces-interface_signatures-"
+
         let
-            signatures_ = ExtendableInterfaces.interface_signatures($_f_name)
+            global var"-ExtendableInterfaces-interface_signatures-"
+
+            signatures_ = var"-ExtendableInterfaces-interface_signatures-"($_f_name)
             updated_signatures = (signatures_..., ($(interface_objects...), ))
-            ExtendableInterfaces.interface_signatures(::typeof($_f_name)) = updated_signatures
+
+            function $(esc(Symbol("-ExtendableInterfaces-interface_signatures-")))(::typeof($_f_name))
+                updated_signatures
+            end
         end
 
         # Function definitions return the generic function:
