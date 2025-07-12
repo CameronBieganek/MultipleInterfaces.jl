@@ -31,8 +31,13 @@ end
 # `using ExtendableInterfaces: @interface, @type, @idispatch`.
 
 
-signatures(f) = Tuple[]
-is_signature_defined(f, signature) = (signature in signatures(f))
+# This function gets overloaded by the `@idispatch` macro in the user scope.
+var"-ExtendableInterfaces-signatures-"(f) = Tuple[]
+
+# A more convenient name for internal usage.
+_signatures(f) = var"-ExtendableInterfaces-signatures-"(f)
+
+is_signature_defined(f, signature) = (signature in _signatures(f))
 
 
 # Return a tuple of signature tuples, where each signature tuple indicates the
@@ -161,10 +166,18 @@ macro idispatch(fdef)
                 throw(MultipleArgumentAmbiguityError())
             end
 
+            import ExtendableInterfaces: var"-ExtendableInterfaces-signatures-"
+
             let
-                signatures_ = ExtendableInterfaces.signatures($f_name)
+                global var"-ExtendableInterfaces-signatures-"
+
+                signatures_ = var"-ExtendableInterfaces-signatures-"($f_name)
                 push!(signatures_, ($(signature...), ))
-                ExtendableInterfaces.signatures(::typeof($f_name)) = signatures_
+
+
+                function $(esc(Symbol("-ExtendableInterfaces-signatures-")))(::typeof($f_name))
+                    signatures_
+                end
             end
         end
         $_f_name(::Tuple{$(interface_signature...)}, $(arg_names...)) = $(body.args...)
