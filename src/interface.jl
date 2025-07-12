@@ -220,13 +220,17 @@ macro type(type, implements::Symbol, interfaces_list_ex)
     quote
         import ExtendableInterfaces: var"-ExtendableInterfaces-implements-"
 
-        let
-            global var"-ExtendableInterfaces-implements-"
+        if isabstracttype($type)
+            error("Cannot declare that an abstract type implements an interface.")
+        else
+            let
+                global var"-ExtendableInterfaces-implements-"
 
-            implemented = update_implemented($type, ($(esc_interface_objs...), ))
+                implemented = update_implemented($type, ($(esc_interface_objs...), ))
 
-            function $(esc(Symbol("-ExtendableInterfaces-implements-")))(::Type{<:$type})
-                implemented
+                function $(esc(Symbol("-ExtendableInterfaces-implements-")))(::Type{<:$type})
+                    implemented
+                end
             end
         end
 
