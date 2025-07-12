@@ -195,9 +195,6 @@ function update_implemented(::Type{T}, new_impls::Tuple) where {T}
 end
 
 
-# TODO: Handle parametric types and possibly abstract types. Or maybe error
-# if `isabstracttype(T)` is true. (That's only true if it is an abstract type
-# declared with `abstract type`.)
 macro type(type, implements::Symbol, interfaces_list_ex)
     type = esc(type)
 
