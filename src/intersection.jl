@@ -13,7 +13,7 @@ function normalize(interfaces::InterfaceInstances)
     if length(simpler) == 1
         typeof(simpler[1])
     else
-        sorted_simpler = sort(collect(simpler), by=concrete_interface_id)
+        sorted_simpler = sort(collect(simpler), by = string ∘ typeof)
         Intersection(tuple(sorted_simpler...))
     end
 end
