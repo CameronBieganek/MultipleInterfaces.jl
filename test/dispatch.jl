@@ -11,27 +11,23 @@ using Test
 
 function a end
 function b end
+function c end
+function d end
+function e end
+function f end
+function g end
 function h end
 
-@interface A begin
-    a
-end
-
-@interface B begin
-    b
-end
+@interface A begin a end
+@interface B begin b end
+@interface C extends A, B begin c end
+@interface D extends B begin d end
+@interface E extends C, D begin e end
+@interface F extends E begin f end
+@interface G extends F begin g end
 
 # Isolated node in interface DAG.
-@interface H begin
-    h
-end
-
-@interface C extends A, B
-@interface D extends B
-@interface E extends C, D
-@interface F extends E
-@interface G extends F
-
+@interface H begin h end
 
 @idispatch foo(a::Int, b: A, c::String, d: B) = 42
 
@@ -165,26 +161,23 @@ using ExtendableInterfaces: dispatch, most_specific, SingleArgumentAmbiguity
 
 function a end
 function b end
+function c end
+function d end
+function e end
+function f end
+function g end
 function h end
 
-@interface A begin
-    a
-end
-
-@interface B begin
-    b
-end
+@interface A begin a end
+@interface B begin b end
+@interface C extends A, B begin c end
+@interface D extends B begin d end
+@interface E extends C, D begin e end
+@interface F extends E begin f end
+@interface G extends F begin g end
 
 # Isolated node in interface DAG.
-@interface H begin
-    h
-end
-
-@interface C extends A, B
-@interface D extends B
-@interface E extends C, D
-@interface F extends E
-@interface G extends F
+@interface H begin h end
 
 
 @testset "most_specific" begin
@@ -293,10 +286,11 @@ end
 
 function j end
 function k end
+function l end
 
 @interface J begin j end
 @interface K begin k end
-@interface L extends J, K
+@interface L extends J, K begin l end
 
 @idispatch baz(x: J) = 1
 
@@ -307,16 +301,20 @@ struct Turtle end
 @idispatch aaa(x: K) = 2
 
 function m end
+function n end
 function o end
+function p end
+function q end
 function r end
+function s end
 
 @interface M begin m end
-@interface N extends M
+@interface N extends M begin n end
 @interface O begin o end
-@interface P extends N, O
-@interface Q extends P
+@interface P extends N, O begin p end
+@interface Q extends P begin q end
 @interface R begin r end
-@interface S extends R
+@interface S extends R begin s end
 
 @idispatch bbb(x: M) = 1
 @idispatch bbb(x: O) = 2

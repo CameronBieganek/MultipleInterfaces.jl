@@ -29,21 +29,17 @@ concrete_interface_id(x::ConcreteInterface) = var"-ExtendableInterfaces-concrete
 
 
 function interface_helper(name, superinterfaces, methods_block)
-    if isnothing(methods_block)
-        methods = ()
-    else
-        check_methods_block_head(methods_block)
+    check_methods_block_head(methods_block)
 
-        if any(arg -> !(arg isa LineNumberNode) && !is_name(arg), methods_block.args)
-            throw(ArgumentError(
-                "Something other than a function name has been provided in the " *
-                "list of required methods for an interface."
-            ))
-        end
-
-        methods = filter(is_name, methods_block.args)
-        methods = map(esc, methods)
+    if any(arg -> !(arg isa LineNumberNode) && !is_name(arg), methods_block.args)
+        throw(ArgumentError(
+            "Something other than a function name has been provided in the " *
+            "list of required methods for an interface."
+        ))
     end
+
+    esc_methods = esc.(filter(is_name, methods_block.args))
+    isempty(esc_methods) && throw_at_least_one_method_error()
 
     esc_superinterfaces = map(esc, superinterfaces.args)
     esc_superinterface_objs = map(s -> :($s()), esc_superinterfaces)
@@ -57,7 +53,7 @@ function interface_helper(name, superinterfaces, methods_block)
         $(esc_superinterfaces...)
 
         # Ditto for the declared methods of the interface.
-        $(methods...)
+        $(esc_methods...)
 
         struct $esc_name <: ConcreteInterface end
 
@@ -70,7 +66,7 @@ function interface_helper(name, superinterfaces, methods_block)
         end
 
         function $(esc(Symbol("-ExtendableInterfaces-required_methods-")))(::$esc_name)
-            ($(methods...),)
+            ($(esc_methods...),)
         end
 
         let
@@ -88,29 +84,25 @@ function interface_helper(name, superinterfaces, methods_block)
 end
 
 
-function check_methods_block_head(methods_block)
-    if methods_block.head != :block
-        throw(ArgumentError(
-            "The required methods for an interface must be listed in a `begin` block."
-        ))
-    end
+function throw_method_block_error()
+    error("The required methods for an interface must be listed in a `begin` block.")
 end
 
 
-# TODO: Enforce that every interface contain at least one required method.
-# I.e., not just root interfaces.
+function check_methods_block_head(methods_block)
+    methods_block.head == :block || throw_method_block_error()
+end
+
+
 function throw_at_least_one_method_error()
-    throw(ArgumentError(
-        "An interface that does not extend any other interface must require " *
-        "at least one method."
-    ))
+    throw(ArgumentError("An interface must require at least one method."))
 end
 
 
 # We could just leave this undefined and thus get a method error, but macro
 # method errors are usually not very informative.
 macro interface(name::Symbol)
-    throw_at_least_one_method_error()
+    throw_method_block_error()
 end
 
 
@@ -121,31 +113,39 @@ macro interface(name::Symbol, methods_block::Expr)
 end
 
 
-macro interface(
-    name::Symbol,
-    extends::Symbol,
-    superinterfaces::Union{Symbol, Expr},
-    methods_block=nothing
-)
+macro interface(name::Symbol, extends::Symbol, superinterfaces::Union{Symbol, Expr}, methods_block)
     if extends !== :extends
-        throw(ArgumentError(
-            "Use `extends` syntax to make a subinterface, like `@interface C extends A, B`."
-        ))
+        error("Use `extends` syntax to make a subinterface, like `@interface C extends A, B`.")
     end
 
     if is_name(superinterfaces)
         superinterfaces = :(($superinterfaces, ))
     else
         if superinterfaces.head != :tuple || any(!is_name, superinterfaces.args)
-            throw(ArgumentError(
+            error(
                 "The superinterfaces must be provided as a comma-separated list, like " *
                 "`@interface C extends A, B`."
-            ))
+            )
         end
     end
 
     interface_helper(name, superinterfaces, methods_block)
 end
+
+
+# TODO: Rewrite the `@interface` macro to use only a single method, like `@interface(exs...)`.
+
+
+macro interface(name::Symbol, extends::Symbol, superinterfaces::Union{Symbol, Expr})
+    throw_method_block_error()
+end
+
+
+macro interface(exs...)
+    error("Syntax error in the `@interface` macro.")
+end
+
+
 
 
 # This function gets overloaded by the `@type` macro in the user scope.

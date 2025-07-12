@@ -65,26 +65,23 @@ using ExtendableInterfaces: ancestors
 
 function a end
 function b end
+function c end
+function d end
+function e end
+function f end
+function g end
 function h end
 
-@interface A begin
-    a
-end
-
-@interface B begin
-    b
-end
+@interface A begin a end
+@interface B begin b end
+@interface C extends A, B begin c end
+@interface D extends B begin d end
+@interface E extends C, D begin e end
+@interface F extends E begin f end
+@interface G extends F begin g end
 
 # Isolated node in interface DAG.
-@interface H begin
-    h
-end
-
-@interface C extends A, B
-@interface D extends B
-@interface E extends C, D
-@interface F extends E
-@interface G extends F
+@interface H begin h end
 
 @testset "ancestors" begin
 
@@ -118,16 +115,11 @@ using ExtendableInterfaces
 
 function a end
 function b end
+function c end
 
-@interface A begin
-    a
-end
-
-@interface B begin
-    b
-end
-
-@interface C extends A, B
+@interface A begin a end
+@interface B begin b end
+@interface C extends A, B begin c end
 
 struct Cat end
 struct Dog end
