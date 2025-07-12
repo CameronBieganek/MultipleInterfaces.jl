@@ -12,19 +12,8 @@ export NoMatchingIDispatchMethodError, SingleArgumentAmbiguityError, MultipleArg
 abstract type Interface end
 abstract type ConcreteInterface end
 
-# TODO: Use hidden names for the methods that are overloaded by macros, and
-# add something like `import ExtendableInterfaces: var"-interface_signatures-"` to
-# the macro expansions.
-
 # TODO: Update `superinterfaces` and `required_methods` so they work on interface intersections?
-
-# TODO:
-# - Update `@idispatch` to work with interface intersections.
-# - Make sure that method redefinition works properly.
-
-# TODO: Allow definitions like this?
-# @idispatch foo(x::Int, y) = 1
-# ...that probaby won't work...
+# TODO: Allow long-form function definitions and keyword arguments in `@idispatch`.
 
 include("utils.jl")
 include("interface.jl")
