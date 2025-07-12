@@ -218,7 +218,7 @@ macro type(type, implements::Symbol, interfaces_list_ex)
         import ExtendableInterfaces: var"-ExtendableInterfaces-implements-"
 
         if isabstracttype($type)
-            error("Cannot declare that an abstract type implements an interface.")
+            throw(ArgumentError("Cannot declare that an abstract type implements an interface."))
         else
             let
                 global var"-ExtendableInterfaces-implements-"
