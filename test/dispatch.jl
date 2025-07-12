@@ -758,3 +758,37 @@ end
 end
 
 end
+
+
+
+####################################################################################################
+
+module TestWhenPackageNameNotInScope
+
+using Test
+using ExtendableInterfaces: @interface, @type, @idispatch, NoMatchingIDispatchMethodError
+
+function a end
+function b end
+
+@interface A begin a end
+@interface B begin b end
+
+struct Ant end
+struct Bear end
+
+@type Ant implements A
+@type Bear implements B
+
+@idispatch foo(a: A) = 1
+@idispatch foo(b: B) = 2
+
+@testset "package name not in scope" begin
+    @test foo(Ant()) == 1
+    @test foo(Bear()) == 2
+
+    @test_throws MethodError foo(1, 2)
+    @test_throws NoMatchingIDispatchMethodError foo(1)
+end
+
+end
