@@ -21,6 +21,16 @@ function required_methods(I::Type{<:ConcreteInterface})
 end
 
 
+# TODO: Improve printing of `RequiredMethodsVector`. In particular, the
+# parent modules of functions should be included in the function name.
+struct RequiredMethodsVector{T} <: AbstractVector{T}
+    methods::Vector{T}
+end
+
+Base.size(req::RequiredMethodsVector) = size(req.methods)
+Base.getindex(req::RequiredMethodsVector, i::Integer) = getindex(req.methods, i)
+
+
 function interface_helper(name, superinterfaces, methods_block)
     check_methods_block_head(methods_block)
 
@@ -58,7 +68,7 @@ function interface_helper(name, superinterfaces, methods_block)
         end
 
         function $(esc(Symbol("-MultipleInterfaces-required_methods-")))(::$esc_name)
-            [$(esc_methods...)]
+            RequiredMethodsVector([$(esc_methods...)])
         end
 
         nothing
@@ -128,8 +138,6 @@ macro interface(exs...)
 end
 
 
-
-
 # This function gets overloaded by the `@type` macro in the user scope.
 var"-MultipleInterfaces-implements-"(::Type) = ()
 
@@ -173,7 +181,7 @@ end
 function all_required_methods(T::Type{<:ConcreteInterface})
     superinterfaces = ancestors(T()) # Never empty, because `T()` is included.
     methods = mapreduce(required_methods ∘ typeof, union, superinterfaces)
-    sort(methods, by=string)
+    RequiredMethodsVector(sort(methods, by=string))
 end
 
 

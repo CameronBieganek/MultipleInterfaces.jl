@@ -42,6 +42,8 @@ end
     methods = required_methods(A)
     @test issetequal(methods, [a1, a2])
     @test methods isa AbstractVector
+    @test_throws Exception methods[1] = sin
+    @test_throws Exception push!(methods, sin)
 
     @test B() === B()
     @test superinterfaces(B) == ()
@@ -49,30 +51,50 @@ end
     methods = required_methods(B)
     @test issetequal(methods, [b1, b2])
     @test methods isa AbstractVector
+    @test_throws Exception methods[1] = sin
+    @test_throws Exception push!(methods, sin)
 
     @test C() === C()
     @test issetequal(superinterfaces(C), (A, B))
-    @test required_methods(C) == [c1]
+
+    methods = required_methods(C)
+    @test issetequal(methods, [c1])
+    @test methods isa AbstractVector
+    @test_throws Exception methods[1] = sin
+    @test_throws Exception push!(methods, sin)
 
     @test D() === D()
     @test superinterfaces(D) == (C, )
-    @test required_methods(D) == [d1]
+
+    methods = required_methods(D)
+    @test issetequal(methods, [d1])
+    @test methods isa AbstractVector
+    @test_throws Exception methods[1] = sin
+    @test_throws Exception push!(methods, sin)
 
     methods = all_required_methods(A)
     @test issetequal(methods, [a1, a2])
     @test methods isa AbstractVector
+    @test_throws Exception methods[1] = sin
+    @test_throws Exception push!(methods, sin)
 
     methods = all_required_methods(B)
     @test issetequal(methods, [b1, b2])
     @test methods isa AbstractVector
+    @test_throws Exception methods[1] = sin
+    @test_throws Exception push!(methods, sin)
 
     methods = all_required_methods(C)
     @test issetequal(methods, [a1, a2, b1, b2, c1])
     @test methods isa AbstractVector
+    @test_throws Exception methods[1] = sin
+    @test_throws Exception push!(methods, sin)
 
     methods = all_required_methods(D)
     @test issetequal(methods, [a1, a2, b1, b2, c1, d1])
     @test methods isa AbstractVector
+    @test_throws Exception methods[1] = sin
+    @test_throws Exception push!(methods, sin)
 end
 
 end

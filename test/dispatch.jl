@@ -712,9 +712,17 @@ function c end
 @testset "`@interface` with module prefixes" begin
     @test C ≼ Bar.B
 
-    @test required_methods(Foo.A) == [Foo.a]
-    @test required_methods(Bar.B) == [Bar.Qux.b]
-    @test required_methods(C) == [c]
+    methods = required_methods(Foo.A)
+    @test issetequal(methods, [Foo.a])
+    @test methods isa AbstractVector
+
+    methods = required_methods(Bar.B)
+    @test issetequal(methods, [Bar.Qux.b])
+    @test methods isa AbstractVector
+
+    methods = required_methods(C)
+    @test issetequal(methods, [c])
+    @test methods isa AbstractVector
 
     @test superinterfaces(Foo.A) == ()
     @test superinterfaces(Bar.B) == ()
