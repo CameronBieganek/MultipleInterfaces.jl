@@ -712,9 +712,9 @@ function c end
 @testset "`@interface` with module prefixes" begin
     @test C ≼ Bar.B
 
-    @test required_methods(Foo.A) == (Foo.a, )
-    @test required_methods(Bar.B) == (Bar.Qux.b, )
-    @test required_methods(C) == (c, )
+    @test required_methods(Foo.A) == [Foo.a]
+    @test required_methods(Bar.B) == [Bar.Qux.b]
+    @test required_methods(C) == [c]
 
     @test superinterfaces(Foo.A) == ()
     @test superinterfaces(Bar.B) == ()

@@ -38,19 +38,41 @@ end
 @testset "@interface" begin
     @test A() === A()
     @test superinterfaces(A) == ()
-    @test issetequal(required_methods(A), (a1, a2))
+
+    methods = required_methods(A)
+    @test issetequal(methods, [a1, a2])
+    @test methods isa AbstractVector
 
     @test B() === B()
     @test superinterfaces(B) == ()
-    @test issetequal(required_methods(B), (b1, b2))
+
+    methods = required_methods(B)
+    @test issetequal(methods, [b1, b2])
+    @test methods isa AbstractVector
 
     @test C() === C()
     @test issetequal(superinterfaces(C), (A, B))
-    @test required_methods(C) == (c1, )
+    @test required_methods(C) == [c1]
 
     @test D() === D()
-    @test issetequal(superinterfaces(D), (C, ))
-    @test required_methods(D) == (d1, )
+    @test superinterfaces(D) == (C, )
+    @test required_methods(D) == [d1]
+
+    methods = all_required_methods(A)
+    @test issetequal(methods, [a1, a2])
+    @test methods isa AbstractVector
+
+    methods = all_required_methods(B)
+    @test issetequal(methods, [b1, b2])
+    @test methods isa AbstractVector
+
+    methods = all_required_methods(C)
+    @test issetequal(methods, [a1, a2, b1, b2, c1])
+    @test methods isa AbstractVector
+
+    methods = all_required_methods(D)
+    @test issetequal(methods, [a1, a2, b1, b2, c1, d1])
+    @test methods isa AbstractVector
 end
 
 end

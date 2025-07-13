@@ -4,7 +4,7 @@ module MultipleInterfaces
 
 export ≼, ⋠
 export @idispatch, @interface, @type
-export implements, is_subinterface, required_methods, superinterfaces
+export all_required_methods, implements, is_subinterface, required_methods, superinterfaces
 export NoMatchingIDispatchMethodError, SingleArgumentAmbiguityError, MultipleArgumentAmbiguityError
 
 abstract type Interface end

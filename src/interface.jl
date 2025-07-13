@@ -58,7 +58,7 @@ function interface_helper(name, superinterfaces, methods_block)
         end
 
         function $(esc(Symbol("-MultipleInterfaces-required_methods-")))(::$esc_name)
-            ($(esc_methods...),)
+            [$(esc_methods...)]
         end
 
         nothing
@@ -167,6 +167,13 @@ function ancestors(interface::ConcreteInterface)
     end
 
     visited
+end
+
+
+function all_required_methods(T::Type{<:ConcreteInterface})
+    superinterfaces = ancestors(T()) # Never empty, because `T()` is included.
+    methods = mapreduce(required_methods ∘ typeof, union, superinterfaces)
+    sort(methods, by=string)
 end
 
 
