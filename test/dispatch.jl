@@ -845,3 +845,43 @@ struct Cat{T <: Number} end
 end
 
 end
+
+
+
+####################################################################################################
+
+module MultilineIDispatchMethodDefinition
+
+using Test
+using MultipleInterfaces
+
+function a end
+function b end
+
+@interface A begin a end
+@interface B begin b end
+
+struct Ant end
+struct Bear end
+
+@type Ant implements A
+@type Bear implements B
+
+@idispatch function foo(x: A, y: A)
+    1
+end
+
+@idispatch function foo(x: A, y: B)
+    2
+end
+
+@testset "multiline `@idispatch` method definition" begin
+    @test foo(Ant(), Ant()) == 1
+    @test foo(Ant(), Bear()) == 2
+
+    @test_throws MethodError foo(1)
+    @test_throws MethodError foo(1, 2, 3)
+    @test_throws NoMatchingIDispatchMethodError foo(Bear(), Bear())
+end
+
+end

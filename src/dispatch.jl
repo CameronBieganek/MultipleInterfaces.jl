@@ -66,13 +66,19 @@ end
 
 # TODO: Fix handling of first argument in `foo(::Int, a: A)`.
 macro idispatch(fdef)
-    # For now assume the single-line form of function definition.
-    call_ex = fdef.args[1]
+    fdef.head in (:function, :(=)) || throw_idispatch_syntax_error()
+
+    call = fdef.args[1]
     body = fdef.args[2]
-    body.head == :block || error("Syntax error.") # TODO: Is this reachable?
-    f_name_sym = call_ex.args[1]
+
+    # TODO: Support `where` syntax.
+    if call.head != :call || body.head != :block
+        throw_idispatch_syntax_error()
+    end
+
+    f_name_sym = call.args[1]
     f_name = esc(f_name_sym)
-    signature_ex = call_ex.args[2:end]
+    signature_ex = call.args[2:end]
     n_args = length(signature_ex)
 
     # Nomenclature
