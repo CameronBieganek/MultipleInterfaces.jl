@@ -850,10 +850,11 @@ end
 
 ####################################################################################################
 
-module MultilineIDispatchMethodDefinition
+module VariousIDispatchMethodDefinitionForms
 
 using Test
 using MultipleInterfaces
+
 
 function a end
 function b end
@@ -882,6 +883,20 @@ end
     @test_throws MethodError foo(1)
     @test_throws MethodError foo(1, 2, 3)
     @test_throws NoMatchingIDispatchMethodError foo(Bear(), Bear())
+end
+
+
+@idispatch bar(x: A) = 1
+@idispatch bar(::Int, x: A) = 2
+@idispatch bar(x: A, ::Int, b: B, ::String) = 3
+
+@testset "anonymous type dispatch in `@idispatch`" begin
+    @test bar(Ant()) == 1
+    @test bar(42, Ant()) == 2
+    @test bar(Ant(), 42, Bear(), "hello") == 3
+
+    @test_throws MethodError bar(Ant(), Bear())
+    @test_throws MethodError bar(42, Ant(), "hello", Bear())
 end
 
 end

@@ -64,7 +64,6 @@ function is_intersection_ex(ex::Expr)
 end
 
 
-# TODO: Fix handling of first argument in `foo(::Int, a: A)`.
 macro idispatch(fdef)
     fdef.head in (:function, :(=)) || throw_idispatch_syntax_error()
 
@@ -95,9 +94,9 @@ macro idispatch(fdef)
 
     signature = sym_vec(n_args)
     underscore_signature = sym_vec(n_args)
-    arg_names = sym_vec(n_args)
     normalized_signature_ex = Vector{Any}(undef, n_args)
 
+    arg_names = Symbol[]
     interface_arg_names = Symbol[]
     interface_signature = Expr[]   # Escaped symbols.
     interface_objects   = Expr[]
@@ -106,9 +105,15 @@ macro idispatch(fdef)
         if arg_ex isa Symbol
             name = normalized_arg = arg_ex
             type = underscore_type = :Any
+            push!(arg_names, name)
         elseif arg_ex.head == :(::)
-            name = arg_ex.args[1]
-            type = underscore_type = arg_ex.args[2]
+            if length(arg_ex.args) == 1
+                type = underscore_type = arg_ex.args[1]
+            else
+                name = arg_ex.args[1]
+                type = underscore_type = arg_ex.args[2]
+                push!(arg_names, name)
+            end
             normalized_arg = arg_ex
         elseif arg_ex.head == :call
             if (
@@ -118,6 +123,8 @@ macro idispatch(fdef)
                 type = :InterfaceArg
                 underscore_type = :_
                 name = normalized_arg = arg_ex.args[2]
+
+                push!(arg_names, name)
                 push!(interface_arg_names, name)
 
                 interface_ex = arg_ex.args[3]
@@ -141,7 +148,6 @@ macro idispatch(fdef)
 
         signature[i] = type
         underscore_signature[i] = underscore_type
-        arg_names[i] = name
         normalized_signature_ex[i] = normalized_arg
     end
 
