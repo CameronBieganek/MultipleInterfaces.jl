@@ -7,8 +7,8 @@
 module TestInferenceSingleArgumentDispatch
 
 using Test
-using ExtendableInterfaces
-using ExtendableInterfaces: dispatch
+using MultipleInterfaces
+using MultipleInterfaces: dispatch
 
 function a end
 function b end
@@ -180,8 +180,8 @@ end # module
 module MultipleDispatchInferrenceTests
 
 using Test
-using ExtendableInterfaces
-using ExtendableInterfaces: dispatch
+using MultipleInterfaces
+using MultipleInterfaces: dispatch
 
 function a end
 function b end
@@ -262,8 +262,8 @@ end
 module MultipleDispatchSingleArgumentAmbiguityTests
 
 using Test
-using ExtendableInterfaces
-using ExtendableInterfaces: dispatch
+using MultipleInterfaces
+using MultipleInterfaces: dispatch
 
 function a end
 function b end
@@ -325,8 +325,8 @@ end
 module MultipleDispatchMultipleArgumentAmbiguityTests
 
 using Test
-using ExtendableInterfaces
-using ExtendableInterfaces: dispatch
+using MultipleInterfaces
+using MultipleInterfaces: dispatch
 
 function a end
 function b end
@@ -367,8 +367,8 @@ end
 module ComplicatedMultipleDispatchTests
 
 using Test
-using ExtendableInterfaces
-using ExtendableInterfaces: dispatch
+using MultipleInterfaces
+using MultipleInterfaces: dispatch
 
 function a end
 function b end

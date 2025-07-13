@@ -1,23 +1,23 @@
 
 
 # This function gets overloaded by the `@interface` macro in the user scope.
-function var"-ExtendableInterfaces-superinterfaces-" end
+function var"-MultipleInterfaces-superinterfaces-" end
 
 # A more convenient name for internal usage.
-_superinterfaces(x::ConcreteInterface) = var"-ExtendableInterfaces-superinterfaces-"(x)
+_superinterfaces(x::ConcreteInterface) = var"-MultipleInterfaces-superinterfaces-"(x)
 
 # The exported version that dispatches on interface types rather than instances.
 function superinterfaces(I::Type{<:ConcreteInterface})
-    map(typeof, var"-ExtendableInterfaces-superinterfaces-"(I()))
+    map(typeof, var"-MultipleInterfaces-superinterfaces-"(I()))
 end
 
 
 # This function gets overloaded by the `@interface` macro in the user scope.
-function var"-ExtendableInterfaces-required_methods-" end
+function var"-MultipleInterfaces-required_methods-" end
 
 # The exported version that dispatches on interface types rather than instances.
 function required_methods(I::Type{<:ConcreteInterface})
-    var"-ExtendableInterfaces-required_methods-"(I())
+    var"-MultipleInterfaces-required_methods-"(I())
 end
 
 
@@ -50,14 +50,14 @@ function interface_helper(name, superinterfaces, methods_block)
 
         struct $esc_name <: ConcreteInterface end
 
-        import ExtendableInterfaces: var"-ExtendableInterfaces-superinterfaces-"
-        import ExtendableInterfaces: var"-ExtendableInterfaces-required_methods-"
+        import MultipleInterfaces: var"-MultipleInterfaces-superinterfaces-"
+        import MultipleInterfaces: var"-MultipleInterfaces-required_methods-"
 
-        function $(esc(Symbol("-ExtendableInterfaces-superinterfaces-")))(::$esc_name)
+        function $(esc(Symbol("-MultipleInterfaces-superinterfaces-")))(::$esc_name)
             $tuple_esc_superinterface_objs
         end
 
-        function $(esc(Symbol("-ExtendableInterfaces-required_methods-")))(::$esc_name)
+        function $(esc(Symbol("-MultipleInterfaces-required_methods-")))(::$esc_name)
             ($(esc_methods...),)
         end
 
@@ -131,10 +131,10 @@ end
 
 
 # This function gets overloaded by the `@type` macro in the user scope.
-var"-ExtendableInterfaces-implements-"(::Type) = ()
+var"-MultipleInterfaces-implements-"(::Type) = ()
 
 # A more convenient name for internal usage.
-_implements(T::Type) = var"-ExtendableInterfaces-implements-"(T)
+_implements(T::Type) = var"-MultipleInterfaces-implements-"(T)
 _implements(::T) where {T} = _implements(T)
 
 # The exported version. Returns interface types rather than instances.
@@ -197,17 +197,17 @@ macro type(type, implements::Symbol, interfaces_list_ex)
     esc_interface_objs = map(ex -> :($(esc(ex))()), interface_exs)
 
     quote
-        import ExtendableInterfaces: var"-ExtendableInterfaces-implements-"
+        import MultipleInterfaces: var"-MultipleInterfaces-implements-"
 
         if isabstracttype($type)
             throw(ArgumentError("Cannot declare that an abstract type implements an interface."))
         else
             let
-                global var"-ExtendableInterfaces-implements-"
+                global var"-MultipleInterfaces-implements-"
 
                 implemented = update_implemented($type, ($(esc_interface_objs...), ))
 
-                function $(esc(Symbol("-ExtendableInterfaces-implements-")))(::Type{<:$type})
+                function $(esc(Symbol("-MultipleInterfaces-implements-")))(::Type{<:$type})
                     implemented
                 end
             end

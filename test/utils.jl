@@ -3,9 +3,9 @@
 module UtilsTests
 
 using Test
-using ExtendableInterfaces
-using ExtendableInterfaces: all_t, any_t, ancestors, filter_t, foldl_t, in_t, map_t
-using ExtendableInterfaces: remove_superinterfaces, tail, transpose_t, union_t
+using MultipleInterfaces
+using MultipleInterfaces: all_t, any_t, ancestors, filter_t, foldl_t, in_t, map_t
+using MultipleInterfaces: remove_superinterfaces, tail, transpose_t, union_t
 
 
 function a end

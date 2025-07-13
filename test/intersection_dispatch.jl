@@ -3,7 +3,7 @@
 module IntersectionDispatchTests
 
 using Test
-using ExtendableInterfaces
+using MultipleInterfaces
 
 
 function a end
@@ -242,7 +242,7 @@ end
 module MoreIntersectionDispatchTests
 
 using Test
-using ExtendableInterfaces
+using MultipleInterfaces
 
 function a end
 function b end
@@ -276,7 +276,7 @@ end
 module IMethodRedefinitionTests
 
 using Test
-using ExtendableInterfaces
+using MultipleInterfaces
 
 
 function a end

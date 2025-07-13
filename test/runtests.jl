@@ -2,7 +2,7 @@
 
 using Test
 
-@testset "ExtendableInterfaces.jl" begin
+@testset "MultipleInterfaces.jl" begin
     include("utils.jl")
     include("interface.jl")
     include("intersection.jl")

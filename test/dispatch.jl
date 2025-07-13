@@ -4,8 +4,8 @@
 
 module IDispatchMacroTests
 
-using ExtendableInterfaces
-using ExtendableInterfaces: signatures, interface_signatures, InterfaceArg
+using MultipleInterfaces
+using MultipleInterfaces: signatures, interface_signatures, InterfaceArg
 using Test
 
 
@@ -155,8 +155,8 @@ end
 module SingleDispatchTests
 
 using Test
-using ExtendableInterfaces
-using ExtendableInterfaces: dispatch, most_specific, SingleArgumentAmbiguity
+using MultipleInterfaces
+using MultipleInterfaces: dispatch, most_specific, SingleArgumentAmbiguity
 
 
 function a end
@@ -347,7 +347,7 @@ end
 module MultipleDispatchTests
 
 using Test
-using ExtendableInterfaces
+using MultipleInterfaces
 
 function a end
 function b end
@@ -430,7 +430,7 @@ end
 module MultipleDispatchSingleArgumentAmbiguityTests
 
 using Test
-using ExtendableInterfaces
+using MultipleInterfaces
 
 function a end
 function b end
@@ -494,7 +494,7 @@ end
 module MultipleDispatchMultipleArgumentAmbiguityTests
 
 using Test
-using ExtendableInterfaces
+using MultipleInterfaces
 
 function a end
 function b end
@@ -537,7 +537,7 @@ end
 module ComplicatedMultipleDispatchTests
 
 using Test
-using ExtendableInterfaces
+using MultipleInterfaces
 
 function a end
 function b end
@@ -686,17 +686,17 @@ end
 module DispatchWithModulePrefixedInterfaces
 
 using Test
-using ExtendableInterfaces
+using MultipleInterfaces
 
 
 module Foo
-    using ExtendableInterfaces
+    using MultipleInterfaces
     function a end
     @interface A begin a end
 end
 
 module Bar
-    using ExtendableInterfaces
+    using MultipleInterfaces
 
     module Qux
         function b end
@@ -764,7 +764,7 @@ end
 module TestWhenPackageNameNotInScope
 
 using Test
-using ExtendableInterfaces: @interface, @type, @idispatch, NoMatchingIDispatchMethodError
+using MultipleInterfaces: @interface, @type, @idispatch, NoMatchingIDispatchMethodError
 
 function a end
 function b end
@@ -798,7 +798,7 @@ end
 module DispatchOnParametricTypes
 
 using Test
-using ExtendableInterfaces
+using MultipleInterfaces
 
 function a end
 function b end

@@ -26,10 +26,10 @@ end
 
 
 # This function gets overloaded by the `@idispatch` macro in the user scope.
-var"-ExtendableInterfaces-signatures-"(f) = Tuple[]
+var"-MultipleInterfaces-signatures-"(f) = Tuple[]
 
 # A more convenient name for internal usage.
-signatures(f) = var"-ExtendableInterfaces-signatures-"(f)
+signatures(f) = var"-MultipleInterfaces-signatures-"(f)
 
 is_signature_defined(f, signature) = (signature in signatures(f))
 
@@ -37,10 +37,10 @@ is_signature_defined(f, signature) = (signature in signatures(f))
 # This function gets overloaded by the `@idispatch` macro in the user scope.
 # Return a tuple of signature tuples, where each signature tuple indicates the
 # interfaces that are dispatched on for one i-dispatch method.
-var"-ExtendableInterfaces-interface_signatures-"(f) = ()
+var"-MultipleInterfaces-interface_signatures-"(f) = ()
 
 # A more convenient name for internal usage.
-interface_signatures(f) = var"-ExtendableInterfaces-interface_signatures-"(f)
+interface_signatures(f) = var"-MultipleInterfaces-interface_signatures-"(f)
 
 
 struct InterfaceArg end
@@ -164,16 +164,16 @@ macro idispatch(fdef)
                 throw(MultipleArgumentAmbiguityError())
             end
 
-            import ExtendableInterfaces: var"-ExtendableInterfaces-signatures-"
+            import MultipleInterfaces: var"-MultipleInterfaces-signatures-"
 
             let
-                global var"-ExtendableInterfaces-signatures-"
+                global var"-MultipleInterfaces-signatures-"
 
-                signatures_ = var"-ExtendableInterfaces-signatures-"($f_name)
+                signatures_ = var"-MultipleInterfaces-signatures-"($f_name)
                 push!(signatures_, ($(signature...), ))
 
 
-                function $(esc(Symbol("-ExtendableInterfaces-signatures-")))(::typeof($f_name))
+                function $(esc(Symbol("-MultipleInterfaces-signatures-")))(::typeof($f_name))
                     signatures_
                 end
             end
@@ -181,15 +181,15 @@ macro idispatch(fdef)
 
         $_f_name(::Tuple{$(interface_signature...)}, $(arg_names...)) = $(body.args...)
 
-        import ExtendableInterfaces: var"-ExtendableInterfaces-interface_signatures-"
+        import MultipleInterfaces: var"-MultipleInterfaces-interface_signatures-"
 
         let
-            global var"-ExtendableInterfaces-interface_signatures-"
+            global var"-MultipleInterfaces-interface_signatures-"
 
-            signatures_ = var"-ExtendableInterfaces-interface_signatures-"($_f_name)
+            signatures_ = var"-MultipleInterfaces-interface_signatures-"($_f_name)
             updated_signatures = (signatures_..., ($(interface_objects...), ))
 
-            function $(esc(Symbol("-ExtendableInterfaces-interface_signatures-")))(::typeof($_f_name))
+            function $(esc(Symbol("-MultipleInterfaces-interface_signatures-")))(::typeof($_f_name))
                 updated_signatures
             end
         end

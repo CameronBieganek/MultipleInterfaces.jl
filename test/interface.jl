@@ -2,7 +2,7 @@
 
 module InterfaceMacroTests
 
-using ExtendableInterfaces
+using MultipleInterfaces
 using Test
 
 
@@ -60,8 +60,8 @@ end
 module AncestorsTests
 
 using Test
-using ExtendableInterfaces
-using ExtendableInterfaces: ancestors
+using MultipleInterfaces
+using MultipleInterfaces: ancestors
 
 function a end
 function b end
@@ -110,7 +110,7 @@ end
 module TypeMacroTests
 
 using Test
-using ExtendableInterfaces
+using MultipleInterfaces
 
 
 function a end

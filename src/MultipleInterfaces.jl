@@ -1,6 +1,6 @@
 
 
-module ExtendableInterfaces
+module MultipleInterfaces
 
 export ≼, ⋠
 export @idispatch, @interface, @type

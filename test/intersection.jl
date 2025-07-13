@@ -3,7 +3,7 @@
 module IntersectionEqualityTests
 
 using Test
-using ExtendableInterfaces
+using MultipleInterfaces
 
 
 function a end
@@ -80,8 +80,8 @@ end
 module IntersectionSubinterfaceTests
 
 using Test
-using ExtendableInterfaces
-using ExtendableInterfaces: remove_superinterfaces, most_specific, SingleArgumentAmbiguity
+using MultipleInterfaces
+using MultipleInterfaces: remove_superinterfaces, most_specific, SingleArgumentAmbiguity
 
 
 function a end
