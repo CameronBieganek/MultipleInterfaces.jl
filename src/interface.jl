@@ -142,10 +142,10 @@ implements(T::Type) = map(typeof, _implements(T))
 
 
 function throw_type_macro_syntax_error()
-    throw(ArgumentError(
+    error(
         "Syntax error in `@type`. To declare that type `Foo` implements interfaces" *
         "`A` and `B`, write `@type Foo implements A, B`."
-    ))
+    )
 end
 
 
