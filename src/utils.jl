@@ -134,6 +134,51 @@ function transpose_t(ts::Tuple)
 end
 
 
+"""
+    is_subinterface(S, T) -> Bool
+
+Test whether interface `S` is a subinterface of `T`. Note that `S`
+is a subinterface of itself.
+
+The binary operator `≼` can be used in place of `is_subinterface`,
+and the binary operator `⋠` can be used in place of `!is_subinterface`.
+Those operators can be typed as \\preccurlyeq<tab> and \\npreccurlyeq<tab>,
+respectively.
+
+# Examples
+```jldoctest
+julia> function a end;
+
+julia> function b end;
+
+julia> @interface A begin a end
+
+julia> @interface B extends A begin
+           b
+       end
+
+julia> is_subinterface(B, A)
+true
+
+julia> is_subinterface(A, B)
+false
+
+julia> B ≼ A
+true
+
+julia> A ≼ B
+false
+
+julia> A ⋠ B
+true
+
+julia> B ⋠ A
+false
+
+julia> A ≼ A
+true
+```
+"""
 function is_subinterface(S::Type{<:ConcreteInterface}, T::Type{<:ConcreteInterface})
     _is_subinterface(S(), T())
 end
