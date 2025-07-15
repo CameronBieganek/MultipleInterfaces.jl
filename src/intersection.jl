@@ -26,6 +26,63 @@ Base.:&(::Type{S}, ::Type{S}) where {S <: ConcreteInterface} = S
 Base.:&(S::Type{<:ConcreteInterface}, T::Type{<:ConcreteInterface}) = normalize((S(), T()))
 Base.:&(s::Intersection, T::Type{<:ConcreteInterface}) = normalize((s.interfaces..., T()))
 Base.:&(S::Type{<:ConcreteInterface}, t::Intersection) = normalize((S(), t.interfaces...))
+
+"""
+    S & T
+
+The intersection of interface `S` and interface `T`. Can be used in an
+i-method to dispatch on objects that implement both interface `S`
+and interface `T`.
+
+The list of required methods for an interface intersection is the union
+of all the methods required to implement `S` and `T`.
+
+The intersection `S & T` is more specific than either `S` or `T`. In
+other words, `S & T ≼ S` and `S & T ≼ T` are `true`.
+
+Examples
+```jldoctest
+julia> function a end; function b end; function c end;
+
+julia> @interface A begin a end
+
+julia> @interface B extends A begin
+           b
+       end
+
+julia> @interface C begin c end
+
+julia> A & A
+A
+
+julia> A & B
+B
+
+julia> A & B & A
+B
+
+julia> A & B & C
+B & C
+
+julia> A & B & C & B
+B & C
+
+julia> B & C ≼ B
+true
+
+julia> B & C ≼ C
+true
+
+julia> B & C ≼ A
+true
+
+julia> A & B ≼ C
+false
+
+julia> A ≼ A & B
+false
+```
+"""
 Base.:&(s::Intersection, t::Intersection) = normalize((s.interfaces..., t.interfaces...))
 
 
