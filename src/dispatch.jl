@@ -5,8 +5,27 @@ struct SingleArgumentAmbiguity end
 struct MultipleArgumentAmbiguity end
 
 
+"""
+    NoMatchingIDispatchMethodError
+
+There is no i-method with a signature matching the arguments provided to
+an i-method function call.
+"""
 struct NoMatchingIDispatchMethodError <: Exception end
+
+"""
+    SingleArgumentAmbiguityError
+
+In a call to an i-method, there is an argument for which there is no
+most specific dispatched upon interface among the matching i-methods.
+"""
 struct SingleArgumentAmbiguityError <: Exception end
+
+"""
+    MultipleArgumentAmbiguityError
+
+There is a multiple-argument method ambiguity in an i-method.
+"""
 struct MultipleArgumentAmbiguityError <: Exception end
 
 
@@ -64,6 +83,65 @@ function is_intersection_ex(ex::Expr)
 end
 
 
+"""
+    @idispatch(args...)
+
+Define an i-method (an interface method), which can dispatch on both
+types and interfaces. An argument `x` that dispatches on an interface
+`A` is written as `x: A`. So, to define an i-method that dispatches
+on the interface `A` in the first argument and on an `Int` in the
+second argument, use the following syntax:
+
+```julia
+@idispatch foo(x: A, y::Int) = 42
+```
+
+Any combination of type dispatch and interface dispatch can be used,
+as long as each argument uses only type dispatch or interface dispatch.
+Dispatch on interface intersections, like `B & C`, is also allowed, as
+can be seen in the following example:
+
+```julia
+@idispatch function qux(w: A, x::Int, y: B & C, z::Float64)
+    w + x + y + z
+end
+```
+
+An i-method first dispatches on the type arguments, and then on the
+interface arguments. For the initial dispatch on the type arguments,
+the interface arguments are treated as having type `Any`. So, if
+you define a method `bar(x) = 1`, and then you define an i-method
+`@idispatch bar(x: A) = 2`, the i-method definition will overwrite
+the previous `bar(x)` method.
+
+# Examples
+```jldoctest
+julia> function a end; function b end; function c end; function d end;
+
+julia> @interface A begin a end; @interface B extends A begin b end
+
+julia> @interface C begin c end; @interface D begin d end
+
+julia> struct Ant end; struct Bear end; struct Mouse end
+
+julia> @type Ant implements A; @type Bear implements B; @type Mouse implements C, D
+
+julia> @idispatch foo(x::Int, y: A, z: C & D) = 1
+foo (generic function with 1 method)
+
+julia> @idispatch foo(x::Int, y: B, z: C & D) = 2
+foo (generic function with 1 method)
+
+julia> foo(42, Ant(), Mouse())
+1
+
+julia> foo(42, Bear(), Mouse())
+2
+
+julia> foo(42, Mouse(), Ant())
+ERROR: No matching i-dispatch method.
+```
+"""
 macro idispatch(fdef)
     fdef.head in (:function, :(=)) || throw_idispatch_syntax_error()
 
