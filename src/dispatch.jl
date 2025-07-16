@@ -32,15 +32,15 @@ struct MultipleArgumentAmbiguityError <: Exception end
 # TODO: Improve the error messages.
 
 function Base.showerror(io::IO, ::NoMatchingIDispatchMethodError)
-    print(io, "No matching i-dispatch method.")
+    print(io, "NoMatchingIDispatchMethodError: No matching i-dispatch method.")
 end
 
 function Base.showerror(io::IO, ::SingleArgumentAmbiguityError)
-    print(io, "There is a single argument i-dispatch ambiguity.")
+    print(io, "SingleArgumentAmbiguityError: There is a single argument i-dispatch ambiguity.")
 end
 
 function Base.showerror(io::IO, ::MultipleArgumentAmbiguityError)
-    print(io, "There is a multiple argument i-dispatch ambiguity.")
+    print(io, "MultipleArgumentAmbiguityError: There is a multiple argument i-dispatch ambiguity.")
 end
 
 
