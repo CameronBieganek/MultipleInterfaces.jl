@@ -30,7 +30,7 @@ In order for a type to implement an interface, it must define a method for each 
 listed in the `@interface` declaration. The required methods for an interface can be queried with
 the `required_methods` function, like this:
 
-```julia
+```julia-repl
 julia> required_methods(A)
 2-element MultipleInterfaces.RequiredMethodsVector{Function}:
  a1 (generic function with 0 methods)
@@ -57,7 +57,7 @@ requirements that are introduced by the corresponding `@interface` declaration. 
 list of all transitive method requirements for an interface, use the `all_required_methods`
 function, as demonstrated below:
 
-```julia
+```julia-repl
 julia> required_methods(B)
 1-element MultipleInterfaces.RequiredMethodsVector{typeof(b)}:
  b (generic function with 0 methods)
@@ -146,7 +146,7 @@ the declaration `@type Foo implements A, B`.
 The list of interfaces implemented by a type can be retrieved with the `implements` function,
 like this:
 
-```julia
+```julia-repl
 julia> implements(Ant)
 (A,)
 
@@ -185,7 +185,7 @@ struct Cat end
 
 Now let's see the i-methods in action:
 
-```julia
+```julia-repl
 julia> foo(Ant())
 1
 
@@ -282,8 +282,8 @@ true
 
 # `is_subinterface` (`≼`)
 
-If interface `B` extends interface `A` (either directly or indirectly), we say that `B` is a
-"subinterface" of `A`. (Note that an interface is also considered to be a subinterface of itself.)
+If interface `B` extends interface `A`, either directly or indirectly, we say that `B` is a
+"subinterface" of `A`. An interface is also considered to be a subinterface of itself.
 You can test the subinterface relationship between two interfaces with the `is_subinterface`
 function. The `is_subinterface` function has a binary operator form, `≼`, which can be typed as
 `\preccurlyeq<tab>`. Here is an example, continuing the examples from above:
