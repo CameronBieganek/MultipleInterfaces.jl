@@ -109,9 +109,9 @@ julia> superinterfaces(D)
 ```
 
 In truth, MultipleInterfaces.jl does not enforce that a type that has implemented an interface has
-implemented all the required methods for that interface. The requirement to provide a list
-of methods when defining an interface is to encourage clear, well designed interfaces and to make
-it easy to discover the requirements of an interface with `required_methods` and
+implemented all the required methods for that interface. MultipleInterfaces.jl requires a list
+of methods when defining an interface in order to encourage clear, well designed interfaces and to
+make it easy to discover the requirements of an interface with `required_methods` and
 `all_required_methods`. If you wish to test that an interface has been correctly implemented, we
 recommend [Supposition.jl](https://github.com/Seelengrab/Supposition.jl). Interface authors are
 encouraged to provide interface test suites based on Supposition.jl.
