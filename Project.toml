@@ -1,7 +1,7 @@
 name = "MultipleInterfaces"
 uuid = "822ac178-5032-4fc5-9e36-cfa8f056a624"
 authors = ["Cameron Bieganek"]
-version = "0.1.0"
+version = "1.0.0"
 
 [compat]
 julia = "1.8"
