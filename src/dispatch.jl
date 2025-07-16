@@ -110,7 +110,7 @@ end
 An i-method first dispatches on the type arguments, and then on the
 interface arguments. For the initial dispatch on the type arguments,
 the interface arguments are treated as having type `Any`. So, if
-you define a method `bar(x) = 1`, and then you define an i-method
+you define a method `bar(x) = 1` and then you define an i-method
 `@idispatch bar(x: A) = 2`, the i-method definition will overwrite
 the previous `bar(x)` method.
 
