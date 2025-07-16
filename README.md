@@ -197,7 +197,7 @@ julia> foo(Cat())
 ```
 
 In the example above, the i-method dispatch behaves the same as regular type-based dispatch.
-However, since interfaces allow multiple inheritance, it is possible to have an ambiguity in the
+However, since interfaces allow multiple inheritance, it's possible to have an ambiguity in the
 dispatch on a single argument. Observe what happens when we call `foo` on a `Mouse`:
 
 ```julia-repl
@@ -280,7 +280,7 @@ true
 ```
 
 
-# `is_subinterface` (`≼`)
+## `is_subinterface` (`≼`)
 
 If interface `B` extends interface `A`, either directly or indirectly, we say that `B` is a
 "subinterface" of `A`. An interface is also considered to be a subinterface of itself.
