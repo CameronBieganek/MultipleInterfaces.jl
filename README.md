@@ -247,6 +247,20 @@ So, if you define a method `bar(x) = 1` and then you define an i-method `@idispa
 the i-method definition will overwrite the previous `bar(x)` method.
 
 
+## Interface dispatch compiles away
+
+The underlying machinery that controls interface dispatch in i-methods compiles away, so there
+is no runtime cost to using i-methods. If we use `@code_typed` on the last i-method call from
+the previous section, we can see that only the user-defined body of the i-method remains:
+
+```julia-repl
+julia> @code_typed foo(42, Ant(), "hello", Mouse())
+CodeInfo(
+1 ─     return 4
+) => Int64
+```
+
+
 ## Interface intersections
 
 Any number of interfaces can be intersected together, like `A & B & C`. Interface intersections
