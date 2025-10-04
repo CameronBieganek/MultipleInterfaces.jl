@@ -63,15 +63,12 @@ interface_signatures(f) = var"-MultipleInterfaces-interface_signatures-"(f)
 
 
 struct InterfaceArg end
-struct TypeArg end
 
 
-sym_vec(n) = Vector{Symbol}(undef, n)
 throw_idispatch_syntax_error() = error("Syntax error in the `@idispatch` macro.")
 
 
 is_intersection_ex(::Any) = false
-
 
 function is_intersection_ex(ex::Expr)
     (
@@ -159,19 +156,19 @@ macro idispatch(fdef)
     n_args = length(signature_ex)
 
     # Nomenclature
-    # ...given the input `foo(x::Int, a: A, y::String, b: B)`
+    # ...given the input `foo(x::Foo, a: A, y::Bar, b: B)`
     #
-    # signature:                 [:Int, :InterfaceArg, :String, :InterfaceArg]
-    # underscore_signature:      [:Int, :_, :String, :_]
-    # underscore_signature_str:  "(Int,_,String,_)"
-    # normalized_signature_ex:   [:(x::Int), :a, :(y::String), :b]
+    # signature:                 [esc(:Foo), :InterfaceArg, esc(:Bar), :InterfaceArg]
+    # underscore_signature:      [:Foo, :_, :Bar, :_]
+    # underscore_signature_str:  "(Foo,_,Bar,_)"
+    # normalized_signature_ex:   [:(x::esc(Foo)), :a, :(y::esc(Bar)), :b]
     # arg_names:                 [:x, :a, :y, :b]
     # interface_signature:       [esc(:A), esc(:B)]
     # interface_arg_names:       [:a, :b]
     # interface_objects:         [:($(esc(:A)())), :($(esc(:B)()))]
 
-    signature = sym_vec(n_args)
-    underscore_signature = sym_vec(n_args)
+    signature = Vector{Any}(undef, n_args)
+    underscore_signature = Vector{Symbol}(undef, n_args)
     normalized_signature_ex = Vector{Any}(undef, n_args)
 
     arg_names = Symbol[]
@@ -186,13 +183,22 @@ macro idispatch(fdef)
             push!(arg_names, name)
         elseif arg_ex.head == :(::)
             if length(arg_ex.args) == 1
-                type = underscore_type = arg_ex.args[1]
+                # This is for handling the first argument in this case:
+                # @idispatch foo(::Int, x: A) = 1
+                type_sym = arg_ex.args[1]
+                type = esc(type_sym)
+                underscore_type = type_sym
+                normalized_arg = :(::$type)
             else
                 name = arg_ex.args[1]
-                type = underscore_type = arg_ex.args[2]
+                type_sym = arg_ex.args[2]
+
+                type = esc(type_sym)
+                underscore_type = type_sym
+                
                 push!(arg_names, name)
+                normalized_arg = :($name::$type)
             end
-            normalized_arg = arg_ex
         elseif arg_ex.head == :call
             if (
                 arg_ex.args[1] == :(:) &&
@@ -228,6 +234,12 @@ macro idispatch(fdef)
         underscore_signature[i] = underscore_type
         normalized_signature_ex[i] = normalized_arg
     end
+
+    # TODO: Can the way that we create the hidden function names cause collisions
+    # if the user defines two methods like this?
+    #
+    # @idispatch foo(x: ModA.Bar) = 1
+    # @idispatch foo(x: ModB.Bar) = 2
 
     underscore_signature_str = "(" * join(underscore_signature, ",") * ")"
     _f_name = esc(Symbol("-idispatch-$f_name_sym$underscore_signature_str-"))

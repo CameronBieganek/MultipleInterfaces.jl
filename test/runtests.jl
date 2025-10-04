@@ -8,6 +8,7 @@ using Test
     include("intersection.jl")
     include("dispatch.jl")
     include("intersection_dispatch.jl")
+    include("issues.jl")
 end
 
 println("\nTesting inference...")
