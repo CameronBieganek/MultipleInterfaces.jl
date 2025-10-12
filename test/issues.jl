@@ -18,3 +18,26 @@ function a end
 @idispatch foo(a: A, x::Fox) = 1
 
 end
+
+
+
+module Issue8
+
+# https://github.com/CameronBieganek/MultipleInterfaces.jl/issues/8
+
+using Test
+using MultipleInterfaces
+
+function a end
+@interface A begin a end
+
+struct Ant end
+@type Ant implements A
+
+f(x) = x
+
+@idispatch g(x: A) = f(x)
+
+@test g(Ant()) == Ant()
+
+end
