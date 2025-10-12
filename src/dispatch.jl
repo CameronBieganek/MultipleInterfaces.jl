@@ -144,6 +144,7 @@ macro idispatch(fdef)
 
     call = fdef.args[1]
     body = fdef.args[2]
+    esc_body_args = map(esc, body.args)
 
     # TODO: Support `where` syntax.
     if call.head != :call || body.head != :block
@@ -172,6 +173,7 @@ macro idispatch(fdef)
     normalized_signature_ex = Vector{Any}(undef, n_args)
 
     arg_names = Symbol[]
+    esc_arg_names = Expr[]
     interface_arg_names = Symbol[]
     interface_signature = Expr[]   # Escaped symbols.
     interface_objects   = Expr[]
@@ -181,6 +183,7 @@ macro idispatch(fdef)
             name = normalized_arg = arg_ex
             type = underscore_type = :Any
             push!(arg_names, name)
+            push!(esc_arg_names, esc(name))
         elseif arg_ex.head == :(::)
             if length(arg_ex.args) == 1
                 # This is for handling the first argument in this case:
@@ -197,6 +200,7 @@ macro idispatch(fdef)
                 underscore_type = type_sym
                 
                 push!(arg_names, name)
+                push!(esc_arg_names, esc(name))
                 normalized_arg = :($name::$type)
             end
         elseif arg_ex.head == :call
@@ -209,6 +213,7 @@ macro idispatch(fdef)
                 name = normalized_arg = arg_ex.args[2]
 
                 push!(arg_names, name)
+                push!(esc_arg_names, esc(name))
                 push!(interface_arg_names, name)
 
                 interface_ex = arg_ex.args[3]
@@ -281,7 +286,7 @@ macro idispatch(fdef)
             end
         end
 
-        $_f_name(::Tuple{$(interface_signature...)}, $(arg_names...)) = $(body.args...)
+        $_f_name(::Tuple{$(interface_signature...)}, $(esc_arg_names...)) = $(esc_body_args...)
 
         import MultipleInterfaces: var"-MultipleInterfaces-interface_signatures-"
 
